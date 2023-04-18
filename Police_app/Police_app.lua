@@ -13,6 +13,8 @@
 local msgOther = {
 	"Pursuit Started, Unknown Vehicle",
 	"Stop The Vehicle Immediately or You Will Be Arrested",
+	"Last WARNING, Stop The Vehicle Immediately or I will have to use force",
+	", I'm attempting PIT maneuver.\nCurrent Speed :",
 	"Suspect In Visual, Vehicle Description: ",
 	"Suspect Lost, Pursuit Aborted\n",
 	" is requesting backup on H1",
@@ -35,6 +37,8 @@ local msgArrest = {
 local buttonsOther = {
 	"Pursuit Started",
 	"Asking To Stop",
+	"Last Warning",
+	"PIT maneuver",
 	"Suspect In Visual",
 	"Suspect Lost",
 	"Backup H1",
@@ -54,43 +58,16 @@ local buttonsArrest = {
 	"Public Disturbance",
 }
 
-local sharedData = ac.connect{
-	ac.StructItem.key('ACP'),        -- optional, to avoid collisions
-	someString = ac.StructItem.string(24), -- 24 is for capacity
-	someInt = ac.StructItem.int(),
-	someDouble = ac.StructItem.double(),
-	someVec = ac.StructItem.vec3()
-}
+-- local sharedData = ac.connect{
+-- 	ac.StructItem.key('ACP'),        -- optional, to avoid collisions
+-- 	someString = ac.StructItem.string(24), -- 24 is for capacity
+-- 	someInt = ac.StructItem.int(),
+-- 	someDouble = ac.StructItem.double(),
+-- 	someVec = ac.StructItem.vec3()
+-- }
 
-local bob = {
-	name = "BOB'S SCRAPYARD",
-	pos = vec3(-3564, 42, -103),
-	dir = vec3(0.31, -0.32, -0.89),
-	active = false,
-	fov = 62.76
-}
-
-local arena = {
-	name = "ARENA",
-	pos = vec3(-2283, 114, 3284),
-	dir = vec3(-0.87, -0.08, 0.47),
-	active = false,
-	fov = 55.22
-}
-
-local bank = {
-	name = "BANK",
-	pos = vec3(-713, 153, 3558),
-	dir = vec3(-0.05, -0.33, -0.94),
-	active = false,
-	fov = 90
-}
-
-local cameras = {
-	bob,
-	arena,
-	bank
-}
+local cameras = {}
+local first = true
 
 local players = {}
 local carInFront
@@ -100,29 +77,32 @@ local suspectCar = ""
 local suspectSpeed = 0
 local isRadar = false
 local isLockedOnPlayer = false
-local isCamera = false
-local message = ""
+local arrestations = {}
+local nbArrest = 1
 local serverIp = ""
 
 local function sendMsgOther(b)
-	if suspectName ~= "" then 
-		if b == 3 then
-			message = message .. msgOther[b] .. suspectCar .. string.format(" driving at %d",suspectSpeed/1.609344) .. "mph\n\n"
+	if suspectName ~= "" then
+		if b == 5 then
+			ac.sendChatMessage(msgOther[b] .. suspectCar .. string.format(" driving at %dmph",suspectSpeed/1.609344))
 		end
 	end
-	if b == 1 or b == 2 then
-		message = message .. msgOther[b] .. "\n\n"
-
+	if b == 1 or b == 2 or b == 3 then
+		ac.sendChatMessage(msgOther[b])
 	elseif b == 4 then
-		message = message .. msgOther[b] .. "Agent " .. ac.getDriverName(0) .. " has lost the suspect\n\n"
-	elseif b > 4 then
-		message = message .. "Agent " .. ac.getDriverName(0) .. msgOther[b] .. "\n\n"
+		ac.sendChatMessage("Control, this is Officer "  .. ac.getDriverName(0) .. msgOther[b] .. string.format("%dmph",ac.getCar(0).speedKmh/1.609344))
+	elseif b == 6 then
+		ac.sendChatMessage(msgOther[b] .. "Officer " .. ac.getDriverName(0) .. " has lost the suspect")
+	elseif b > 6 then
+		ac.sendChatMessage("Officer " .. ac.getDriverName(0) .. msgOther[b])
 	end
 end
 
 local function sendMsgArrest(b)
 	if suspectName ~= "" then 
-		message = message .. msgArrest[b] .. "Agent " .. ac.getDriverName(0) .. " has arrested " .. suspectName .." driving a " .. suspectCar .. "\n\n"
+		arrestations[nbArrest] = msgArrest[b] .. "Officer " .. ac.getDriverName(0) .. " has arrested " .. suspectName .." driving a " .. suspectCar .. os.date("\nDate of the Arrestation: %c")
+		ac.sendChatMessage(msgArrest[b] .. "Officer " .. ac.getDriverName(0) .. " has arrested " .. suspectName .." driving a " .. suspectCar)
+		nbArrest = nbArrest + 1
 	end
 end
 
@@ -219,62 +199,54 @@ local function tabRadar()
 end
 
 local function printMessage()
-	ui.text(message)
+	local allMsg = ""
+
+	ui.text("Set ClipBoard by clicking on the message you want to Copy")
+	for i = 1, #arrestations do
+		if ui.button("#" .. i .. ": ") then
+			ui.getClipboardText(arrestations[i])
+		end
+		ui.sameLine()
+		ui.text(arrestations[i])
+	end
+	if ui.button("Set all messages to ClipBoard") then
+		for i = 1, #arrestations do
+			allMsg = allMsg .. arrestations[i] .. "\n"
+		end
+		ui.getClipboardText(arrestations)
+	end
 end
 
 local function tabCamera()
-	if ac.getSim().cameraMode == ac.CameraMode.Free then --button to return to car because pressing f1 is annoying 
-        if ui.button('return camera to car') then ac.setCurrentCamera(ac.CameraMode.Cockpit) end
-      end
-      --group logic coming at some name maybe
 
-      if ui.button('save point') then
-        local pos3 = ac.getCar(ac.getSim().focusedCar).position
-        local dir3 = ac.getCar(ac.getSim().focusedCar).look
-        if ac.getSim().cameraMode == ac.CameraMode.Free then
-          pos3 = ac.getCameraPosition()
-          dir3 = ac.getCameraForward()
-        end
-        table.insert(cameras,
-          {
-			name = "name",
-            pos = vec3(
-              math.round(pos3.x,1),
-              math.round((pos3.y - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5),1),
-              math.round(pos3.z,1)
-            ),
-            dir = math.round(-ac.getCompassAngle(dir3)),
-			fov = 90,
-          }
-        )
-      end
+end
 
-	for i,j in pairs(cameras) do
-		if not ((i-1)%5==0) and i>1 then ui.sameLine() end
-		local h = math.rad(j.dir + ac.getCompassAngle(vec3(0, 0, 1)))
-		local heading = vec3(math.sin(h), 0, math.cos(h))
-		ui.button(j.name .. (j.name=='name' and (i-1) or ''), vec2(70, 20))
-		ui.popStyleColor()
-		if ui.itemClicked(ui.MouseButton.Left) then ac.setCurrentCamera(ac.CameraMode.Free) ac.setCameraPosition(j.pos) ac.setCameraDirection(heading) end
-		if ui.itemClicked(ui.MouseButton.Right) then table.remove(cameras, i) end
-	end
+local function loadCameras(ini)
+	for a, b in ini:iterateValues('SURVEILLANCE_CAMERAS', 'SECTOR') do
+		local n = tonumber(b:match('%d+')) + 1
 
-	for i = 1, #cameras do		
-		if ui.button(cameras[i].name) then
-			ac.setCurrentCamera(6)
-			for j = 1, #cameras do
-				cameras[j].active = false
+		if cameras[n] == nil then
+			for i = #cameras, n do
+				if cameras[i] == nil then cameras[i] = {} end
 			end
-			cameras[i].active = true
 		end
-		if cameras[i].active then
-			ui.text("Camera Direction : " .. cameras[i].dir.x .. " " .. cameras[i].dir.y .. " " .. cameras[i].dir.z)
-			ac.setCameraDirection(cameras[i].dir)
-			ac.setCameraPosition(cameras[i].pos)
-			ac.setCameraFOV(cameras[i].fov)
+		local suffix = b:match('_(%a+)$')
+		if suffix==nil then cameras[n]['NAME'] = ini:get('SURVEILLANCE_CAMERAS', b, '')
+		elseif suffix == 'POS' then cameras[n]['POS'] = ini:get('SURVEILLANCE_CAMERAS', b, vec3())
+		elseif suffix == 'DIR' then cameras[n]['DIR'] = ini:get('SURVEILLANCE_CAMERAS', b, vec3())
+		elseif suffix == 'FOV' then cameras[n]['FOV'] = ini:get('SURVEILLANCE_CAMERAS', b, 0)
 		end
 	end
 end
+
+local function onShowWindow()
+	if first then
+		local onlineExtras = ac.INIConfig.onlineExtras()
+		loadCameras(onlineExtras)
+	first = false
+	end
+end
+
 
 function script.windowMain(dt)
 	if serverIp == ac.getServerIP() then
@@ -282,10 +254,11 @@ function script.windowMain(dt)
 		ui.text(visible)
 		ui.text(ac.getDriverName(visible))
 		if ac.getCarID(0) == "charger" then
+			onShowWindow()
 			ui.tabBar('someTabBarID', function ()
 				ui.tabItem('Shortcuts', tabShortcuts)
 				ui.tabItem('Radar', tabRadar)
-				ui.tabItem('Camera', tabCamera)
+				ui.tabItem('Surveillance Camras', tabCamera)
 				ui.tabItem('Message', printMessage)
 			end)
 		else
