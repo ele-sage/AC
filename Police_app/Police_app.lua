@@ -54,6 +54,14 @@ local buttonsArrest = {
 	"Public Disturbance",
 }
 
+local sharedData = ac.connect{
+	ac.StructItem.key('ACP'),        -- optional, to avoid collisions
+	someString = ac.StructItem.string(24), -- 24 is for capacity
+	someInt = ac.StructItem.int(),
+	someDouble = ac.StructItem.double(),
+	someVec = ac.StructItem.vec3()
+}
+
 local bob = {
 	name = "BOB'S SCRAPYARD",
 	pos = vec3(-3564, 42, -103),
@@ -94,6 +102,7 @@ local isRadar = false
 local isLockedOnPlayer = false
 local isCamera = false
 local message = ""
+local serverIp = ""
 
 local function sendMsgOther(b)
 	if suspectName ~= "" then 
@@ -118,11 +127,11 @@ local function sendMsgArrest(b)
 end
 
 local function getCarInFront()
-	if ui.checkbox('Activate Radar', isRadar) then 
+	if ui.checkbox('Activate Radar', isRadar) then
 		isRadar = not isRadar
 	end
 	if isRadar then
-		if ui.checkbox('Activate Target Mod', isLockedOnPlayer) then 
+		if ui.checkbox('Activate Target Mod', isLockedOnPlayer) then
 			isLockedOnPlayer = not isLockedOnPlayer
 			carInFront = ac.getCarIndexInFront(0)
 		end
@@ -145,12 +154,11 @@ local function getCarInFront()
 			suspectName = ""
 			suspectCar = ""
 			suspectSpeed = 0
-		end 
+		end
 	end
 end
 
 local function tabShortcuts()
-	
 	getCarInFront()
 	ui.newLine(100)
 	ui.dwriteText("Arrest Messages", 20, rgbm.colors.green)
@@ -176,11 +184,11 @@ local function tabRadar()
 	local yourName = ac.getDriverName(0)
 	local j = 1
 
-	if ui.checkbox('Activate Radar', isRadar) then 
+	if ui.checkbox('Activate Radar', isRadar) then
 		isRadar = not isRadar
 	end
 	if isRadar then
-		for i = ac.getSim().carsCount - 1, 0, -1 do 
+		for i = ac.getSim().carsCount - 1, 0, -1 do
 			local car = ac.getCar(i)
 			if car.isConnected and (not car.isHidingLabels) then
 				players[j] = {
@@ -215,27 +223,79 @@ local function printMessage()
 end
 
 local function tabCamera()
-	-- for i = 1, #cameras do		
-	-- 	if ui.button(cameras[i].name) then
-	-- 		ac.setCurrentCamera(6)
-	-- 		for j = 1, #cameras do
-	-- 			cameras[j].active = false
-	-- 		end
-	-- 		cameras[i].active = true
-	-- 	end
-	-- 	if cameras[i].active then
-	-- 		ui.text("Camera Direction : " .. cameras[i].dir.x .. " " .. cameras[i].dir.y .. " " .. cameras[i].dir.z)
-	-- 		ac.setCameraDirection(cameras[i].dir)
-	-- 		ac.setCameraPosition(cameras[i].pos)
-	-- 		ac.setCameraFOV(cameras[i].fov)
-	-- 	end
-	-- end
+	if ac.getSim().cameraMode == ac.CameraMode.Free then --button to return to car because pressing f1 is annoying 
+        if ui.button('return camera to car') then ac.setCurrentCamera(ac.CameraMode.Cockpit) end
+      end
+      --group logic coming at some name maybe
+
+      if ui.button('save point') then
+        local pos3 = ac.getCar(ac.getSim().focusedCar).position
+        local dir3 = ac.getCar(ac.getSim().focusedCar).look
+        if ac.getSim().cameraMode == ac.CameraMode.Free then
+          pos3 = ac.getCameraPosition()
+          dir3 = ac.getCameraForward()
+        end
+        table.insert(cameras,
+          {
+			name = "name",
+            pos = vec3(
+              math.round(pos3.x,1),
+              math.round((pos3.y - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5),1),
+              math.round(pos3.z,1)
+            ),
+            dir = math.round(-ac.getCompassAngle(dir3)),
+			fov = 90,
+          }
+        )
+      end
+
+	for i,j in pairs(cameras) do
+		if not ((i-1)%5==0) and i>1 then ui.sameLine() end
+		local h = math.rad(j.dir + ac.getCompassAngle(vec3(0, 0, 1)))
+		local heading = vec3(math.sin(h), 0, math.cos(h))
+		ui.button(j.name .. (j.name=='name' and (i-1) or ''), vec2(70, 20))
+		ui.popStyleColor()
+		if ui.itemClicked(ui.MouseButton.Left) then ac.setCurrentCamera(ac.CameraMode.Free) ac.setCameraPosition(j.pos) ac.setCameraDirection(heading) end
+		if ui.itemClicked(ui.MouseButton.Right) then table.remove(cameras, i) end
+	end
+
+	for i = 1, #cameras do		
+		if ui.button(cameras[i].name) then
+			ac.setCurrentCamera(6)
+			for j = 1, #cameras do
+				cameras[j].active = false
+			end
+			cameras[i].active = true
+		end
+		if cameras[i].active then
+			ui.text("Camera Direction : " .. cameras[i].dir.x .. " " .. cameras[i].dir.y .. " " .. cameras[i].dir.z)
+			ac.setCameraDirection(cameras[i].dir)
+			ac.setCameraPosition(cameras[i].pos)
+			ac.setCameraFOV(cameras[i].fov)
+		end
+	end
 end
 
 function script.windowMain(dt)
-	ui.tabBar('someTabBarID', function ()
-		ui.tabItem('Shortcuts', tabShortcuts)	
-		ui.tabItem('Radar', tabRadar)
-		ui.tabItem('Message', printMessage)
-	end)
+	if serverIp == ac.getServerIP() then
+		local visible = ac.getCar(0).visibleIndex
+		ui.text(visible)
+		ui.text(ac.getDriverName(visible))
+		if ac.getCarID(0) == "charger" then
+			ui.tabBar('someTabBarID', function ()
+				ui.tabItem('Shortcuts', tabShortcuts)
+				ui.tabItem('Radar', tabRadar)
+				ui.tabItem('Camera', tabCamera)
+				ui.tabItem('Message', printMessage)
+			end)
+		else
+			ui.text("This APP is only for police cars")
+		end
+	else
+		ui.text("This MOD was made for the ACP server")
+		ui.textHyperlink("https://discord.com/invite/5Wka8QF")
+		ui.text(ac.getServerIP())
+		local sim = ac.getSim()
+		ui.text(sim.directMessagingAvailable)
+	end
 end
