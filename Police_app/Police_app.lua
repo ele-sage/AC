@@ -37,34 +37,32 @@ local msgArrest = {
 	"Reason of the Arrest : Hitting Pedestrian\n",
 	"Reason of the Arrest : Car Theft\n",
 	"Reason of the Arrest : Evading Police\n",
-	"Reason of the Arrest : Unlicensed Driver\n",
 	"Reason of the Arrest : Intoxication While Driving\n",
 	"Reason of the Arrest : Public Disturbance\n",
 }
 
 local buttonsOther = {
-	"engage pursuit.png",
-	"Request suspect to stop.png",
-	"Final warning to stop.png",
-	"PIT Maneuver.png",
-	"suspect visual lost.png",
-	"suspect visual regained.png",
-	"terminate pursuit.png",
-	"Backup H1.png",
-	"Backup H2.png",
-	"Backup H3.png",
-	"Backup C1.png",
+	"Engage",
+	"Stop",
+	"Final",
+	"PIT",
+	"lost",
+	"regained",
+	"terminate",
+	"H1",
+	"H2",
+	"H3",
+	"C1",
 }
 
 local buttonsArrest = {
 	"Speeding",
-	"Illegal Racing",
-	"Hitting Pedestrian",
-	"Car Theft",
-	"Evading Police",
-	"Unlicensed Driver",
+	"Racing",
+	"Hitting",
+	"Theft",
+	"Evading",
 	"Intoxication",
-	"Public Disturbance",
+	"Disturbance",
 }
 
 local bob = {
@@ -145,10 +143,10 @@ local function sendMsgOther(b)
 			ac.sendChatMessage(msgOther[b] .. suspectCar .. string.format(" driving at %dmph",suspectSpeed/1.609344))
 		end
 	end
-	if b == 1 or b == 2 or b == 3 then
+	if b == 1 or b == 3 then
 		ac.sendChatMessage(msgOther[b])
 	elseif b == 2 then
-		ac.sendChatMessage(msgStop[os.time() % 4])
+		ac.sendChatMessage(msgStop[math.floor(os.clock()) % 4 + 1])
 	elseif b == 4 then
 		ac.sendChatMessage("Control, this is Officer "  .. ac.getDriverName(0) .. msgOther[b] .. string.format("%dmph",ac.getCar(0).speedKmh/1.609344))
 	elseif b == 7 then
@@ -202,16 +200,17 @@ end
 local function tabShortcuts()
 	getCarInFront()
 	ui.newLine(100)
-
-
+	
 	ui.dwriteText("Other Messages", 20, rgbm.colors.green)
 	for i = 1, #buttonsOther do
-		if ui.imageButton(buttonsOther[i], vec2(10,10)) then
+		if ui.button(buttonsOther[i]) then
 			sendMsgOther(i)
 		end
-		if i % 3 == 1 then
-			ui.sameLine(150)
-		elseif i % 3 == 2 then
+		if i % 4 == 1 then
+			ui.sameLine(100)
+		elseif i % 4 == 2 then
+			ui.sameLine(200)
+		elseif i % 4 == 3 then
 			ui.sameLine(300)
 		end
 	end
@@ -221,9 +220,11 @@ local function tabShortcuts()
 		if ui.button(buttonsArrest[i]) then
 			sendMsgArrest(i)
 		end
-		if i % 3 == 1 then
-			ui.sameLine(150)
-		elseif i % 3 == 2 then
+		if i % 4 == 1 then
+			ui.sameLine(100)
+		elseif i % 4 == 2 then
+			ui.sameLine(200)
+		elseif i % 4 == 3 then
 			ui.sameLine(300)
 		end
 	end
@@ -291,8 +292,6 @@ local function getMessage()
 	local allMsg = ""
 	
 	ui.text("Set ClipBoard by clicking on the button\nnext to the message you want to copy.")
-	ui.separator()
-	ui.popButtonRepeat()
 	for i = 1, #arrestations do
 		if ui.smallButton("#" .. i .. ": ", vec2(0,10)) then
 			ui.setClipboardText(arrestations[i])
@@ -311,16 +310,16 @@ end
 
 function script.windowMain(dt)
 	if serverIp == ac.getServerIP() then
-		--if ac.getCarID(0) == valideCar then
+		if ac.getCarID(0) == valideCar then
 			ui.tabBar('someTabBarID', function ()
 				ui.tabItem('Shortcuts', tabShortcuts)
 				ui.tabItem('Radar', tabRadar)
 				ui.tabItem('Cameras', tabCamera)
 				ui.tabItem('Arrestations', getMessage)
 			end)
-		-- else
-		-- 	ui.text("This APP is only for police cars")
-		-- end
+		else
+			ui.text("This APP is only for police cars")
+		end
 	else
 		ui.text("This MOD was made for the ACP server")
 		if ui.textHyperlink("https://discord.gg/acpursuit") then
