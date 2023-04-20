@@ -1,5 +1,5 @@
 -- Author: 	Emile Le Sage
--- Date: 	2023-04-15
+-- Date: 	2023-04-18
 
 -- This script is a police app for Assetto Corsa
 -- It allows you to send in game chat messages that tagged automatically infos of the player in front of you
@@ -10,12 +10,20 @@
 
 -- Currently the script output messages in the message tab to not spoiled the players with the messages
 
+local msgStop = {
+	"Metatropolis PD, pull the vehicle over!",
+	"This is the MPD, pull over the vehicle safely!",
+	"I am Chief of Police Britarnya Valon. Pull over the vehicle. If you cooperate, we can work something out!",
+	"Metatropolis PD, stop your vehicle!",
+}
+
 local msgOther = {
 	"Pursuit Started, Unknown Vehicle",
-	"Stop The Vehicle Immediately or You Will Be Arrested",
+	"",
 	"Last WARNING, Stop The Vehicle Immediately or I will have to use force",
 	", I'm attempting PIT maneuver.\nCurrent Speed :",
 	"Suspect In Visual, Vehicle Description: ",
+	"Suspect Lost, Vehicle Description: ",
 	"Suspect Lost, Pursuit Aborted\n",
 	" is requesting backup on H1",
 	" is requesting backup on H2",
@@ -30,21 +38,22 @@ local msgArrest = {
 	"Reason of the Arrest : Car Theft\n",
 	"Reason of the Arrest : Evading Police\n",
 	"Reason of the Arrest : Unlicensed Driver\n",
-	"Reason of the Arrest : Public Intoxication\n",
+	"Reason of the Arrest : Intoxication While Driving\n",
 	"Reason of the Arrest : Public Disturbance\n",
 }
 
 local buttonsOther = {
-	"Pursuit Started",
-	"Asking To Stop",
-	"Last Warning",
-	"PIT maneuver",
-	"Suspect In Visual",
-	"Suspect Lost",
-	"Backup H1",
-	"Backup H2",
-	"Backup H3",
-	"Backup C1",
+	"engage pursuit.png",
+	"Request suspect to stop.png",
+	"Final warning to stop.png",
+	"PIT Maneuver.png",
+	"suspect visual lost.png",
+	"suspect visual regained.png",
+	"terminate pursuit.png",
+	"Backup H1.png",
+	"Backup H2.png",
+	"Backup H3.png",
+	"Backup C1.png",
 }
 
 local buttonsArrest = {
@@ -54,20 +63,68 @@ local buttonsArrest = {
 	"Car Theft",
 	"Evading Police",
 	"Unlicensed Driver",
-	"Public Intoxication",
+	"Intoxication",
 	"Public Disturbance",
 }
 
--- local sharedData = ac.connect{
--- 	ac.StructItem.key('ACP'),        -- optional, to avoid collisions
--- 	someString = ac.StructItem.string(24), -- 24 is for capacity
--- 	someInt = ac.StructItem.int(),
--- 	someDouble = ac.StructItem.double(),
--- 	someVec = ac.StructItem.vec3()
--- }
+local bob = {
+	name = "BOB'S SCRAPYARD",
+	pos = vec3(-3564, (30 - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5), -103),
+	dir = math.round(-ac.getCompassAngle(vec3(0.30, -0.18, -0.94))),
+	fov = 60
+}
 
-local cameras = {}
-local first = true
+local arena = {
+	name = "ARENA",
+	pos = vec3(-2283, (114 - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5), 3284),
+	dir = math.round(-ac.getCompassAngle(vec3(-0.87, -0.08, 0.47))),
+	fov = 70
+}
+
+local bank = {
+	name = "BANK",
+	pos = vec3(-716, (149.5 - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5),3556.4),
+	dir = math.round(-ac.getCompassAngle(vec3(-0.04, -0.05, -1.00))),
+	fov = 95
+}
+
+local SR = {
+	name = "STREET RUNNERS",
+	pos = vec3(-57.3, (102 - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5), 2935.5),
+	dir = math.round(-ac.getCompassAngle(vec3(-0.10, -0.05, -0.99))),
+	fov = 67
+}
+
+local RC = {
+	name = "ROAD CRIMINALS",
+	pos = vec3(-2332, (99.6 - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5), 3119.2),
+	dir = math.round(-ac.getCompassAngle(vec3(-0.93, -0.01, 0.36))),
+	fov = 60
+}
+
+local RR = {
+	name = "RECKLESS RENEGADES",
+	pos = vec3(-2993.7, (-25.9 - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5),-601.7),
+	dir = math.round(-ac.getCompassAngle(vec3(0.96, -0.04, -0.27))),
+	fov = 60
+}
+
+local MM = {
+	name = "MOTION MASTERS",
+	pos = vec3(-2120.4, (-13.3 - physics.raycastTrack(pos3, vec3(0, -1, 0), 20) + 0.5),-1911.5),
+	dir = math.round(-ac.getCompassAngle(vec3(-1.00, 0.00, 0.03))),
+	fov = 60
+}
+
+local cameras = {
+	bob,
+	arena,
+	bank,
+	SR,
+	RC,
+	RR,
+	MM
+}
 
 local players = {}
 local carInFront
@@ -79,32 +136,36 @@ local isRadar = false
 local isLockedOnPlayer = false
 local arrestations = {}
 local nbArrest = 1
-local serverIp = ""
+local serverIp = "95.211.222.135"
+local valideCar = "chargerpolice_acpursuit"
 
 local function sendMsgOther(b)
 	if suspectName ~= "" then
-		if b == 5 then
+		if b == 5 or b == 6 then
 			ac.sendChatMessage(msgOther[b] .. suspectCar .. string.format(" driving at %dmph",suspectSpeed/1.609344))
 		end
 	end
 	if b == 1 or b == 2 or b == 3 then
 		ac.sendChatMessage(msgOther[b])
+	elseif b == 2 then
+		ac.sendChatMessage(msgStop[os.time() % 4])
 	elseif b == 4 then
 		ac.sendChatMessage("Control, this is Officer "  .. ac.getDriverName(0) .. msgOther[b] .. string.format("%dmph",ac.getCar(0).speedKmh/1.609344))
-	elseif b == 6 then
+	elseif b == 7 then
 		ac.sendChatMessage(msgOther[b] .. "Officer " .. ac.getDriverName(0) .. " has lost the suspect")
-	elseif b > 6 then
+	elseif b > 7 then
 		ac.sendChatMessage("Officer " .. ac.getDriverName(0) .. msgOther[b])
 	end
 end
 
 local function sendMsgArrest(b)
 	if suspectName ~= "" then 
-		arrestations[nbArrest] = msgArrest[b] .. "Officer " .. ac.getDriverName(0) .. " has arrested " .. suspectName .." driving a " .. suspectCar .. os.date("\nDate of the Arrestation: %c")
+		arrestations[nbArrest] = string.format("%s", msgArrest[b] .. "Officer " .. ac.getDriverName(0) .. " has arrested " .. suspectName .."\nWho was driving a " .. suspectCar .. os.date("\nDate of the Arrestation: %c"))
 		ac.sendChatMessage(msgArrest[b] .. "Officer " .. ac.getDriverName(0) .. " has arrested " .. suspectName .." driving a " .. suspectCar)
 		nbArrest = nbArrest + 1
 	end
 end
+
 
 local function getCarInFront()
 	if ui.checkbox('Activate Radar', isRadar) then
@@ -141,16 +202,29 @@ end
 local function tabShortcuts()
 	getCarInFront()
 	ui.newLine(100)
-	ui.dwriteText("Arrest Messages", 20, rgbm.colors.green)
-	ui.sameLine(300)
+
+
 	ui.dwriteText("Other Messages", 20, rgbm.colors.green)
+	for i = 1, #buttonsOther do
+		if ui.imageButton(buttonsOther[i], vec2(10,10)) then
+			sendMsgOther(i)
+		end
+		if i % 3 == 1 then
+			ui.sameLine(150)
+		elseif i % 3 == 2 then
+			ui.sameLine(300)
+		end
+	end
+	ui.newLine()
+	ui.dwriteText("Arrest Messages", 20, rgbm.colors.green)
 	for i = 1, #buttonsArrest do
 		if ui.button(buttonsArrest[i]) then
 			sendMsgArrest(i)
 		end
-		ui.sameLine(300)
-		if ui.button(buttonsOther[i]) then
-			sendMsgOther(i)
+		if i % 3 == 1 then
+			ui.sameLine(150)
+		elseif i % 3 == 2 then
+			ui.sameLine(300)
 		end
 	end
 	ui.newLine(50)
@@ -198,77 +272,59 @@ local function tabRadar()
 	end
 end
 
-local function printMessage()
-	local allMsg = ""
+local function tabCamera()
+	for i = 1, #cameras do		
+		local h = math.rad(cameras[i].dir + ac.getCompassAngle(vec3(0, 0, 1)))
+		if ui.button(cameras[i].name) then 
+			ac.setCurrentCamera(ac.CameraMode.Free) 
+			ac.setCameraPosition(cameras[i].pos) 
+			ac.setCameraDirection(vec3(math.sin(h), 0, math.cos(h))) 
+			ac.setCameraFOV(cameras[i].fov)
+		end
+	end
+	if ac.getSim().cameraMode == ac.CameraMode.Free then --button to return to car because pressing f1 is annoying 
+        if ui.button('Police car camera') then ac.setCurrentCamera(ac.CameraMode.Cockpit) end
+    end
+end
 
-	ui.text("Set ClipBoard by clicking on the message you want to Copy")
+local function getMessage()
+	local allMsg = ""
+	
+	ui.text("Set ClipBoard by clicking on the button\nnext to the message you want to copy.")
+	ui.separator()
+	ui.popButtonRepeat()
 	for i = 1, #arrestations do
-		if ui.button("#" .. i .. ": ") then
-			ui.getClipboardText(arrestations[i])
+		if ui.smallButton("#" .. i .. ": ", vec2(0,10)) then
+			ui.setClipboardText(arrestations[i])
 		end
 		ui.sameLine()
 		ui.text(arrestations[i])
 	end
+	ui.newLine()
 	if ui.button("Set all messages to ClipBoard") then
 		for i = 1, #arrestations do
-			allMsg = allMsg .. arrestations[i] .. "\n"
+			allMsg = allMsg .. arrestations[i] .. "\n\n"
 		end
-		ui.getClipboardText(arrestations)
+		ui.setClipboardText(allMsg)
 	end
 end
-
-local function tabCamera()
-
-end
-
-local function loadCameras(ini)
-	for a, b in ini:iterateValues('SURVEILLANCE_CAMERAS', 'SECTOR') do
-		local n = tonumber(b:match('%d+')) + 1
-
-		if cameras[n] == nil then
-			for i = #cameras, n do
-				if cameras[i] == nil then cameras[i] = {} end
-			end
-		end
-		local suffix = b:match('_(%a+)$')
-		if suffix==nil then cameras[n]['NAME'] = ini:get('SURVEILLANCE_CAMERAS', b, '')
-		elseif suffix == 'POS' then cameras[n]['POS'] = ini:get('SURVEILLANCE_CAMERAS', b, vec3())
-		elseif suffix == 'DIR' then cameras[n]['DIR'] = ini:get('SURVEILLANCE_CAMERAS', b, vec3())
-		elseif suffix == 'FOV' then cameras[n]['FOV'] = ini:get('SURVEILLANCE_CAMERAS', b, 0)
-		end
-	end
-end
-
-local function onShowWindow()
-	if first then
-		local onlineExtras = ac.INIConfig.onlineExtras()
-		loadCameras(onlineExtras)
-	first = false
-	end
-end
-
 
 function script.windowMain(dt)
 	if serverIp == ac.getServerIP() then
-		local visible = ac.getCar(0).visibleIndex
-		ui.text(visible)
-		ui.text(ac.getDriverName(visible))
-		if ac.getCarID(0) == "charger" then
-			onShowWindow()
+		--if ac.getCarID(0) == valideCar then
 			ui.tabBar('someTabBarID', function ()
 				ui.tabItem('Shortcuts', tabShortcuts)
 				ui.tabItem('Radar', tabRadar)
-				ui.tabItem('Surveillance Camras', tabCamera)
-				ui.tabItem('Message', printMessage)
+				ui.tabItem('Cameras', tabCamera)
+				ui.tabItem('Arrestations', getMessage)
 			end)
-		else
-			ui.text("This APP is only for police cars")
-		end
+		-- else
+		-- 	ui.text("This APP is only for police cars")
+		-- end
 	else
 		ui.text("This MOD was made for the ACP server")
-		ui.textHyperlink("https://discord.com/invite/5Wka8QF")
-		ui.text(ac.getServerIP())
-		local sim = ac.getSim()
-		ui.text(sim.directMessagingAvailable)
+		if ui.textHyperlink("https://discord.gg/acpursuit") then
+			os.openURL("https://discord.gg/acpursuit")
+		end
 	end
 end
