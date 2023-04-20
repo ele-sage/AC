@@ -7,7 +7,7 @@
 
 -- This script is a work in progress, and will be updated in the future
 
-local serverIp = ""
+local serverIp = "95.211.222.135"
 
 local firstLoad = true
 local distance = 0
