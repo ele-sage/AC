@@ -20,7 +20,6 @@ local function getSectors()
 		sector.length = speedTrapsIni:get(section, "LENGTH", 0)
 		sector.pb = speedTrapsIni:get(section, "PB", 0)
 		sector.png = speedTrapsIni:get(section, "PNG", "")
-		sector.index = index - 1
 		sector.active = false
 		sector.finished = false
 		table.insert(sectors, sector)
@@ -43,7 +42,7 @@ local function getSpeedTraps()
 		)
 		speedTrap.pb = speedTrapsIni:get(section, "PB", 0)
 		speedTrap.png = speedTrapsIni:get(section, "PNG", "")
-		speedTrap.index = index - 1
+		speedTrap.active = false
 		table.insert(speedTraps, speedTrap)
 	end
 	return speedTraps
@@ -64,7 +63,7 @@ local function getDriftZones()
 		)
 		driftZone.pb = driftZonesIni:get(section, "PB", 0)
 		driftZone.png = driftZonesIni:get(section, "PNG", "")
-		driftZone.index = index - 1
+		driftZone.active = false
 		table.insert(driftZones, driftZone)
 	end
 	return driftZones

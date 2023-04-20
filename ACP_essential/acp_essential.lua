@@ -23,26 +23,13 @@ ac.onSessionStart(function(sessionIndex, restarted)
 	end
 end)
 
-function script.update(dt)
-	sim = ac.getSim()
-
-	if sim.isOnlineRace then
-		ac.unloadApp()
-		return
-	end
-	if not ac.isWindowOpen("ACP Essential") then
-		return
-	end
-	if not INITIALIZED then
-		if sim.isInMainMenu or sim.isSessionStarted then
-			INITIALIZED = initialize(data)
-		end
-	end
-end
-
 
 local function tabLocation()
-	ui.text("Location: ")
+	ui.tabBar('locationTabBarID', function ()
+		ui.tabItem('SpeedTrapLocations', tabSpeedTrap)
+		ui.tabItem('DriftZoneLocations', tabDriftZone)
+		ui.tabItem('SectorsLocations', tabSector)
+	end)
 end
 
 local function tabCamera()
@@ -59,55 +46,38 @@ local function tabCamera()
 end
 
 local function tabSpeedTrap()
-	local car = ac.getCar(0)
 
-	for i = 1, #data.speedTraps do
-		if car.position.x > data.speedTraps[i].pos.x and car.position.z > data.speedTraps[i].pos.y and car.position.x < data.speedTraps[i].pos.z and car.position.z < data.speedTraps[i].pos.w then
-			if car.speedKmh > data.speedTraps[i].pb then
-				data.speedTraps[i].pb = car.speedKmh
-			end
-		end
-		ui.dwriteDrawText(data.speedTraps[i].name, 20, vec2(20, i*30 + 50), rgbm.colors.withe)
-		ui.dwriteDrawText(string.format("Speed:  %.2f", car.speedKmh) .."km/h\n", 20, vec2(250, i*30 + 50), rgbm.colors.green)
-	end
 end
 
 local function tabDriftZone()
-	local car = ac.getCar(0)
 
-	for i = 1, #data.driftZone do
-		if car.position.x > data.driftZone[i].location.x and car.position.z > data.driftZone[i].location.y and car.position.x < data.driftZone[i].location.z and car.position.z < data.driftZone[i].location.w then
-			data.driftZone[i].speed = car.speedKmh
-		end
-		ui.dwriteDrawText(data.driftZone[i].name, 20, vec2(20, i*30 + 50), rgbm.colors.withe)
-		ui.dwriteDrawText(string.format("Speed:  %.2f", data.driftZone[i].speed) .."km/h\n", 20, vec2(250, i*30 + 50), rgbm.colors.green)
-	end
 end
 
 local function tabSector(dt)
 	local pos3 = ac.getCar(0).position
 
-	if firstLoad then
-		ui.dwriteDrawText("data.Sectors NULL | time: 0:00:00", 30, vec2(10, 60), rgbm.colors.red)
-	end
+
 	for i = 1, #data.sectors do
-		if pos3.x > data.sectors[i].start.x and pos3.z > data.sectors[i].start.y and pos3.x < data.sectors[i].start.z and pos3.z < data.sectors[i].start.w then
+		if ui.checkbox('Sector ' .. data.sectors[i].name, data.sectors[i].active) then
+			for j = 1, #data.sectors do
+				data.sectors[j].active = false
+				data.sectors[j].finished = false
+				time = 0
+				min = 0
+			end
+			data.sectors[i].active = not data.sectors[i].active
+			s = i
+		end
+	end
+	if data.sectors[s].active and s then
+		if pos3.x > data.sectors[s].start.x and pos3.z > data.sectors[s].start.y and pos3.x < data.sectors[s].start.z and pos3.z < data.sectors[s].start.w then
 			time = 0
 			min = 0
 			for j = 1, #data.sectors do
 				data.sectors[j].active = false
 			end
 			distance = ac.getCar(0).distanceDrivenSessionKm
-			data.sectors[i].active = true
-			data.sectors[i].finished = false
-			s = i
-			if s == i then
-				break
-			end
 		end
-	end
-	if data.sectors[s].active == true then
-		firstLoad = false
 		time = time + dt
 		timeSec = timeSec + dt
 		if time > 60 then
@@ -120,7 +90,7 @@ local function tabSector(dt)
 			stime = string.format("%.2f", time)
 		end
 		ui.dwriteDrawText("Sector " .. data.sectors[s].name .. " | TIME: " .. string.format("%d:", min) .. stime, 30, vec2(10, 60), rgbm.colors.red)
-		if pos3.x > data.sectors[s].end_.x and pos3.z > data.sectors[s].end_.y and pos3.x < data.sectors[s].end_.z and pos3.z < data.sectors[s].end_.w then
+		if pos3.x > data.sectors[s].finish.x and pos3.z > data.sectors[s].finish.y and pos3.x < data.sectors[s].finish.z and pos3.z < data.sectors[s].finish.w then
 			if ac.getCar(0).distanceDrivenSessionKm - distance > data.sectors[s].lenght then
 				data.sectors[s].active = false
 				data.sectors[s].finished = true
@@ -131,27 +101,28 @@ local function tabSector(dt)
 			end
 		end
 	end
-	if data.sectors[s].finished == true then
+	if data.sectors[s].finished and s then
 		ui.dwriteDrawText("Sector " .. data.sectors[s].name .. " | TIME: " .. string.format("%d:", min) .. stime, 30, vec2(10, 60), rgbm.colors.green)
 	end
-
 end
 
 function script.windowMain(dt)
-	ui.text(ui.getActiveID())
 	if INITIALIZED then
 		if serverIp == ac.getServerIP() then
 			ui.tabBar('someTabBarID', function ()
 				ui.tabItem('Location', tabLocation)
 				ui.tabItem('camera', tabCamera)
-				ui.tabItem('SpeedTrap', function () tabSpeedTrap() end)
-				ui.tabItem('DriftZone', function () tabDriftZone() end)
-				ui.tabItem('data.Sectors', function () tabSector(dt) end)
+				ui.tabItem('SpeedTrap', tabSpeedTrap)
+				ui.tabItem('DriftZone', tabDriftZone)
+				ui.tabItem('Sectors', tabSector)
 			end)
 		else
 			ui.text("This MOD was made for the ACP server")
 			ui.textHyperlink("https://discord.com/invite/5Wka8QF")
 		end
+	else
+		INITIALIZED = initialize(data)
+		ui.text("Initializing...")
 	end
 end
 

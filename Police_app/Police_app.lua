@@ -42,17 +42,17 @@ local msgArrest = {
 }
 
 local buttonsOther = {
-	"Engage",
-	"Stop",
-	"Final",
-	"PIT",
-	"lost",
-	"regained",
-	"terminate",
-	"H1",
-	"H2",
-	"H3",
-	"C1",
+	"Pursuit.png",
+	"Stop.png",
+	"Final.png",
+	"PIT.png",
+	"Lost.png",
+	"Regained.png",
+	"Terminate.png",
+	"H1.png",
+	"H2.png",
+	"H3.png",
+	"C1.png",
 }
 
 local buttonsArrest = {
@@ -203,7 +203,8 @@ local function tabShortcuts()
 	
 	ui.dwriteText("Other Messages", 20, rgbm.colors.green)
 	for i = 1, #buttonsOther do
-		if ui.button(buttonsOther[i]) then
+		ui.image(buttonsOther[i], vec2(15, 15))
+		if ui.invisibleButton(buttonsOther[i], vec2(15, 15)) then
 			sendMsgOther(i)
 		end
 		if i % 4 == 1 then
