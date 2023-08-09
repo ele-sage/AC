@@ -13,11 +13,15 @@ local fontMultiplier = windowHeight/1440
 local carID = ac.getCarID(0)
 local cspAboveP218 = cspVersion >= 2363
 local emile = ac.getUserSteamID() == "76561199125972202"
+local wheels = car.wheels
+
+if carID == valideCar[1] or carID == valideCar[2] or cspVersion < cspMinVersion then return end
 
 local highestScore = 0
 local driftState = {
 	bestScore = 0,
 	lastScore = 0,
+	valid = true,
 }
 
 ------------------------------------------------------------------------- JSON Utils -------------------------------------------------------------------------
@@ -180,13 +184,14 @@ local nodes = {['Settings'] = 'Settings',
 				['Car Thefts'] = 'Theft',
 				['Velocity Vendetta'] = 'VV',
 				['Drift'] = 'Drift',
-				['Overtake'] = 'Overtake'}
+				['Overtake'] = 'Overtake',
+				['Most Wanted'] = 'Most Wanted'}
 
 local welcomeClosed = false
 
 local leaderboard = {}
 local leaderboardName = 'Class C - H1'
-local leaderboardNames = {'Class C - H1', 'Velocity Vendetta', 'JDM LEGENDS', 'Street Racing', 'Car Thefts', 'Arrestations','HORIZON', 'Drift', 'Overtake'}
+local leaderboardNames = {'Class C - H1', 'Velocity Vendetta', 'JDM LEGENDS', 'Street Racing', 'Car Thefts', 'Arrestations','HORIZON', 'Drift', 'Overtake', 'Most Wanted'}
 
 local settings = {
 	essentialSize = 20,
@@ -203,6 +208,8 @@ local settings = {
 	menuPos = vec2(0, 0),
 	unit = "km/h",
 	unitMult = 1,
+	starsSize = 20,
+	starsPos = vec2(windowWidth, 0),
 }
 
 local settingsJSON = {
@@ -220,7 +227,10 @@ local settingsJSON = {
 	menuPos = vec2(0, 0),
 	unit = "km/h",
 	unitMult = 1,
+	starsSize = 20,
+	starsPos = vec2(windowWidth, 0),
 }
+
 
 ui.setAsynchronousImagesLoading(true)
 local imageSize = vec2(0,0)
@@ -306,48 +316,10 @@ local sectors  = {
 	{
 		name = 'Velocity Vendetta',
 		pointsData = {{vec3(-3951.9,-184.7,10007.2), vec3(-3944.9,-184.7,10004.4)},
-					{vec3(-4114.5,-204.5,10065.7), vec3(-4118.2,-204.1,10058.1)},
-					{vec3(-4482.6,-235.7,10323), vec3(-4489.3,-235.8,10319.7)},
-					{vec3(-4653.5,-267.7,10577.2), vec3(-4651.1,-268,10584.3)},
-					{vec3(-4824.2,-281.1,10360.3), vec3(-4815.4,-280.9,10356.9)},
-					{vec3(-4824.3,-293.5,10047.7), vec3(-4817.4,-292.6,10037.6)},
-					{vec3(-4975.1,-319.5,10203), vec3(-4973.4,-319.3,10210.8)},
-					{vec3(-5229.9,-329.9,10224), vec3(-5234.1,-329.6,10218.1)},
-					{vec3(-5403.1,-338.6,10339.4), vec3(-5402.3,-338.5,10346.8)},
-					{vec3(-5507.8,-347,10338.1), vec3(-5514.1,-347,10343.2)},
 					{vec3(-5774.6,-349.1,10183.9), vec3(-5776.7,-349.2,10173.8)},
-					{vec3(-5514.1,-347,10343.2), vec3(-5507.8,-347,10338.1)},
-					{vec3(-5402.3,-338.5,10346.8), vec3(-5403.1,-338.6,10339.4)},
-					{vec3(-5234.1,-329.6,10218.1), vec3(-5229.9,-329.9,10224)},
-					{vec3(-4973.4,-319.3,10210.8), vec3(-4975.1,-319.5,10203)},
-					{vec3(-4817.4,-292.6,10037.6), vec3(-4824.3,-293.5,10047.7)},
-					{vec3(-4815.4,-280.9,10356.9), vec3(-4824.2,-281.1,10360.3)},
-					{vec3(-4651.1,-268,10584.3), vec3(-4653.5,-267.7,10577.2)},
-					{vec3(-4489.3,-235.8,10319.7), vec3(-4482.6,-235.7,10323)},
-					{vec3(-4118.2,-204.1,10058.1), vec3(-4114.5,-204.5,10065.7)},
-					{vec3(-3944.9,-184.7,10004.4), vec3(-3951.9,-184.7,10007.2)},
 					{vec3(-3977.2,-147.5,9537.4), vec3(-3969.2,-147.6,9540.2)}},
 		linesData = {vec4(-3944.9,10004.4,-3951.9,10007.2),
-					vec4(-4114.5,10065.7,-4118.2,10058.1),
-					vec4(-4482.6,10323,-4489.3,10319.7),
-					vec4(-4651.1,10584.3,-4653.5,10577.2),
-					vec4(-4824.2,10360.3,-4815.4,10356.9),
-					vec4(-4824.3,10047.7,-4817.4,10037.6),
-					vec4(-4973.4,10210.8,-4975.1,10203),
-					vec4(-5229.9,10224,-5234.1,10218.1),
-					vec4(-5402.3,10346.8,-5403.1,10339.4),
-					vec4(-5514.1,10343.2,-5507.8,10338.1),
 					vec4(-5774.6,10183.9,-5776.7,10173.8),
-					vec4(-5507.8,10338.1,-5514.1,10343.2),
-					vec4(-5403.1,10339.4,-5402.3,10346.8),
-					vec4(-5234.1,10218.1,-5229.9,10224),
-					vec4(-4975.1,10203,-4973.4,10210.8),
-					vec4(-4817.4,10037.6,-4824.3,10047.7),
-					vec4(-4815.4,10356.9,-4824.2,10360.3),
-					vec4(-4653.5,10577.2,-4651.1,10584.3),
-					vec4(-4489.3,10319.7,-4482.6,10323),
-					vec4(-4118.2,10058.1,-4114.5,10065.7),
-					vec4(-3951.9,10007.2,-3944.9,10004.4),
 					vec4(-3977.2,9537.4,-3969.2,9540.2)},
 		length = 4,
 	},
@@ -383,14 +355,61 @@ local sectors  = {
 	}
 }
 
-local driftSectors = {
-	{
-		name = 'DRIFT',
-		pointsData = {{vec3(0,0,0), vec3(0,0,0)},
-					{vec3(0,0,0), vec3(0,0,0)}},
-		linesData = {vec4(0,0,0,0),
-					vec4(0,0,0,0)},
-	}
+local drugAccessPointsName = {
+	"Gas Station 1",
+	"Street Runners",
+	"Gas Station 2",
+	"MC Danalds 1",
+	"Road Criminals",
+	"MC Danalds 2",
+	"Gas Station 3",
+	"Reckless Renegades",
+	"Motion Masters",
+	"Restaurants 1",
+	"Restaurants 2",
+	"Restaurants 3",
+	"Restaurants 4",
+	"Restaurants 5",
+	"Restaurants 6",
+	"Restaurants 7",
+	"MC Danalds 3",
+	"Restaurants 8",
+	"MC Danalds 4",
+	"Restaurants 9",
+}
+
+local drugAccessPoints = {
+	[1] = vec3(779.2,96.9,2225.4),
+	[2] = vec3(-78.9,100.3,2906.2),
+	[3] = vec3(-902.2,144.1,3494.8),
+	[4] = vec3(-2029.1,99.9,3522.9),
+	[5] = vec3(-2357,97.2,3147.6),
+	[6] = vec3(-2605.8,94.9,2863.1),
+	[7] = vec3(-4021.3,59.4,65.4),
+	[8] = vec3(-2952.5,-28.5,-593.4),
+	[9] = vec3(-2154.1,-14.3,-1928.1),
+	[10] = vec3(-2317.3,-23.2,-2443),
+	[11] = vec3(-1084.8,-121.5,-3029.7),
+	[12] = vec3(-152.9,-120.3,-3427.6),
+	[13] = vec3(913.1,-77.8,-2670.6),
+	[14] = vec3(2751.9,23.2,-2169.7),
+	[15] = vec3(4231.5,135.1,-2789.3),
+	[16] = vec3(4942.5,101.7,-2367),
+	[17] = vec3(4890.5,69.9,-1525.5),
+	[18] = vec3(4556.7,62.3,-1031.8),
+	[19] = vec3(3147.5,55.9,214.7),
+	[20] = vec3(1831.1,71.9,1621.5)
+}
+
+local drugDelivery = {
+	pickUp = vec3(0,0,0),
+	dropOff = vec3(0,0,0),
+	pickUpName = "",
+	dropOffName = "",
+	active = false,
+	started = false,
+	drawPickUp = false,
+	drawDropOff = false,
 }
 
 local sector = nil
@@ -443,13 +462,40 @@ local function regionAroundLine(line)
 	return region
 end
 
+local function isPointInCircle(point, circle, radius)
+	if math.distanceSquared(point, circle) <= radius then
+		--ac.log("Point in circle")
+		return true
+	end
+	--ac.log("Point not in circle")
+	return false
+end
+
 local function midPoint(p1, p2)
 	local point = vec3((p1.x + p2.x)/2, (p1.y + p2.y)/2, (p1.z + p2.z)/2)
 	local radius = distance(vec2(p1.x, p1.z), vec2(point.x, point.z))
 	return point, radius
 end
 
--- Init
+-------------------------------------------------------------------------------------------- Init --------------------------------------------------------------------------------------------
+
+local starsUI = {
+	starsPos = vec2(windowWidth - (settings.starsSize or 20)/2, settings.starsSize or 20)/2,
+	starsSize = vec2(windowWidth - (settings.starsSize or 20)*2, (settings.starsSize or 20)*2),
+	startSpace = (settings.starsSize or 20)/4,
+}
+
+local function resetStarsUI()
+	if settings.starsPos == nil then
+		settings.starsPos = vec2(windowWidth, 0)
+	end
+	if settings.starsSize == nil then
+		settings.starsSize = 20
+	end
+	starsUI.starsPos = vec2(settings.starsPos.x - settings.starsSize/2, settings.starsPos.y + settings.starsSize/2)
+	starsUI.starsSize = vec2(settings.starsPos.x - settings.starsSize*2, settings.starsPos.y + settings.starsSize*2)
+	starsUI.startSpace = settings.starsSize/1.5
+end
 
 local function updatePos()
 	imageSize = vec2(windowHeight/80 * settings.essentialSize, windowHeight/80 * settings.essentialSize)
@@ -466,6 +512,8 @@ local function updatePos()
 	imgPos.rightPos1 = vec2(imageSize.x, imageSize.y/2.8)
 	imgPos.rightPos2 = vec2(imageSize.x - imageSize.x/8, imageSize.y/4.3)
 	settings.fontSize = settings.essentialSize * fontMultiplier
+
+	resetStarsUI()
 end
 
 local function initLines()
@@ -489,6 +537,27 @@ local function initLines()
 	updatePos()
 end
 
+local function initDrugRoute()
+	local accessPoint = tonumber(os.date("%d")) % #drugAccessPoints + 1
+
+	drugDelivery.pickUp = drugAccessPoints[accessPoint]
+	drugDelivery.pickUpName = drugAccessPointsName[accessPoint]
+	local deliveryPoint = tonumber(os.date("%d")) * accessPoint % 4 + 3
+	ac.log(deliveryPoint)
+	ac.log(accessPoint)
+	if (accessPoint + deliveryPoint) > #drugAccessPoints then
+		deliveryPoint = accessPoint + deliveryPoint - #drugAccessPoints
+	else
+		deliveryPoint = accessPoint + deliveryPoint
+	end
+	drugDelivery.dropOff = drugAccessPoints[deliveryPoint]
+	drugDelivery.dropOffName = drugAccessPointsName[deliveryPoint]
+	ac.log(ac.trackCoordinateToWorld(car.position))
+	ac.log(ac.getCameraForward())
+end
+
+
+
 local function textWithBackground(text, sizeMult)
 	local textLenght = ui.measureDWriteText(text, settings.fontSizeMSG*sizeMult)
 	local rectPos1 = vec2(settings.msgOffsetX - textLenght.x/2, settings.msgOffsetY)
@@ -504,7 +573,9 @@ end
 
 ----------------------------------------------------------------------------------------------- Firebase -----------------------------------------------------------------------------------------------
 
+
 local function stringToVec2(str)
+	if str == nil then return vec2(0, 0) end
 	local x = string.match(str, "([^,]+)")
 	local y = string.match(str, "[^,]+,(.+)")
 	return vec2(tonumber(x), tonumber(y))
@@ -541,13 +612,17 @@ local function parsesettings(table)
 	settings.menuPos = stringToVec2(table.menuPos)
 	settings.unit = table.unit
 	settings.unitMult = table.unitMult
-
-	
+	settings.starsSize = table.starsSize or 20
+	if table.starsPos == nil then
+		settings.starsPos = vec2(windowWidth, 0)
+	else
+		settings.starsPos = stringToVec2(table.starsPos)
+	end
 end
 
 local function addPlayerToDataBase(steamID)
 	local name = ac.getDriverName(0)
-	local str = '{"' .. steamID .. '": {"Name":"' .. name .. '","Drift": 0,"Overtake": 0,"Wins": 0,"Losses": 0,"Busted": 0,"Arrests": 0,"Theft": 0,"Sectors": {"H1": {},"VV": {},"BOB": {}}}}'
+	local str = '{"' .. steamID .. '": {"Name":"' .. name .. '","Getaway": 0,"Drift": 0,"Overtake": 0,"Wins": 0,"Losses": 0,"Busted": 0,"Arrests": 0,"Theft": 0,"Sectors": {"H1": {},"VV": {},"BOB": {}}}}'
 	web.request('PATCH', firebaseUrl .. nodes["Players"] .. ".json", str, function(err, response)
 		if err then
 			print(err)
@@ -557,7 +632,7 @@ local function addPlayerToDataBase(steamID)
 end
 
 local function addPlayersettingsToDataBase(steamID)
-	local str = '{"' .. steamID .. '": {"essentialSize":20,"policeSize":20,"hudOffsetX":0,"hudOffsetY":0,"fontSize":20,"current":1,"colorHud":"1,0,0,1","timeMsg":10,"msgOffsetY":10,"msgOffsetX":' .. windowWidth/2 .. ',"fontSizeMSG":30,"menuPos":"0,0","unit":"km/h","unitMult":1}}'
+	local str = '{"' .. steamID .. '": {"essentialSize":20,"policeSize":20,"hudOffsetX":0,"hudOffsetY":0,"fontSize":20,"current":1,"colorHud":"1,0,0,1","timeMsg":10,"msgOffsetY":10,"msgOffsetX":' .. windowWidth/2 .. ',"fontSizeMSG":30,"menuPos":"0,0","unit":"km/h","unitMult":1,"starsSize":20}}'
 	web.request('PATCH', firebaseUrl .. nodes["Settings"] .. ".json", str, function(err, response)
 		if err then
 			print(err)
@@ -605,6 +680,9 @@ local function getFirebase()
 					playerData.Overtake = 0
 				else
 					highestScore = playerData.Overtake
+				end
+				if not playerData.Getaway then
+					playerData.Getaway = 0
 				end
 			end
 			ac.log('Player data loaded')
@@ -657,6 +735,8 @@ local function onSettingsChange()
 	settingsJSON.fontSizeMSG = settings.fontSizeMSG
 	settingsJSON.unit = settings.unit
 	settingsJSON.unitMult = settings.unitMult
+	settingsJSON.starsSize = settings.starsSize
+	settingsJSON.starsPos = vec2ToString(settings.starsPos)
 	updateSettings()
 end
 
@@ -876,10 +956,34 @@ end
 
 local showPreviewMsg = false
 local showPreviewDistanceBar = false
+local showPreviewStars = false
 COLORSMSGBG = rgbm(0.5,0.5,0.5,0.5)
 
+local online = {
+	message = "",
+	messageTimer = 0,
+	type = 1,
+	chased = false,
+	officer = nil,
+	level = 0,
+}
+
+local function showStarsPursuit()
+	local starsColor = rgbm(1, 1, 1, os.clock()%2 + 0.3)
+	resetStarsUI()
+	for i = 1, 5 do
+		if i > online.level/2 then
+			ui.drawIcon(ui.Icons.StarEmpty, starsUI.starsPos, starsUI.starsSize, rgbm(1, 1, 1, 0.2))
+		else
+			ui.drawIcon(ui.Icons.StarFull, starsUI.starsPos, starsUI.starsSize, starsColor)
+		end
+		starsUI.starsPos.x = starsUI.starsPos.x - settings.starsSize - starsUI.startSpace
+		starsUI.starsSize.x = starsUI.starsSize.x - settings.starsSize - starsUI.startSpace
+	end
+end
+
 local function distanceBarPreview()
-	ui.beginTransparentWindow("progressBar", vec2(0, 0), vec2(windowWidth, windowHeight))
+	ui.transparentWindow("progressBar", vec2(0, 0), vec2(windowWidth, windowHeight), function ()
 	local playerInFront = "You are in front"
 	local text = math.floor(50) .. "m"
 	local textLenght = ui.measureDWriteText(text, 30)
@@ -890,11 +994,11 @@ local function distanceBarPreview()
 	ui.progressBar(125/250, vec2(windowWidth/3,windowHeight/60), playerInFront)
 	ui.endRotation(90,vec2(settings.msgOffsetX - windowWidth/2 - textLenght.x/2,settings.msgOffsetY + textLenght.y/3))
 	ui.dwriteDrawText(text, 30, vec2(settings.msgOffsetX - textLenght.x/2 , settings.msgOffsetY), rgbm.colors.white)
-	ui.endTransparentWindow()
+	end)
 end
 
 local function previewMSG()
-	ui.beginTransparentWindow("previewMSG", vec2(0, 0), vec2(windowWidth, windowHeight))
+	ui.transparentWindow("previewMSG", vec2(0, 0), vec2(windowWidth, windowHeight), function ()
 	ui.pushDWriteFont("Orbitron;Weight=Black")
 	local textSize = ui.measureDWriteText("Messages from Police when being chased", settings.fontSizeMSG)
 	local uiOffsetX = settings.msgOffsetX - textSize.x/2
@@ -902,33 +1006,51 @@ local function previewMSG()
 	ui.drawRectFilled(vec2(uiOffsetX - 5, uiOffsetY-5), vec2(uiOffsetX + textSize.x + 5, uiOffsetY + textSize.y + 5), COLORSMSGBG)
 	ui.dwriteDrawText("Messages from Police when being chased", settings.fontSizeMSG, vec2(uiOffsetX, uiOffsetY), settings.colorHud)
 	ui.popDWriteFont()
-	ui.endTransparentWindow()
+	end)
 end
+
+local function previewStars()
+	ui.transparentWindow("PreviewStars", vec2(0, 0), vec2(windowWidth, windowHeight), function ()
+		showStarsPursuit()
+	end)
+end
+
 
 local function uiTab()
 	ui.text('On Screen Message : ')
 	settings.timeMsg = ui.slider('##' .. 'Time Msg On Screen', settings.timeMsg, 1, 15, 'Time Msg On Screen' .. ': %.0fs')
 	settings.fontSizeMSG = ui.slider('##' .. 'Font Size MSG', settings.fontSizeMSG, 10, 50, 'Font Size' .. ': %.0f')
-	ui.newLine()
-	ui.text('Offset : ')
 	settings.msgOffsetY = ui.slider('##' .. 'Msg On Screen Offset Y', settings.msgOffsetY, 0, windowHeight, 'Msg On Screen Offset Y' .. ': %.0f')
 	settings.msgOffsetX = ui.slider('##' .. 'Msg On Screen Offset X', settings.msgOffsetX, 0, windowWidth, 'Msg On Screen Offset X' .. ': %.0f')
     ui.newLine()
+	ui.text('Stars : ')
+	settings.starsPos.x = ui.slider('##' .. 'Stars Offset X', settings.starsPos.x, 0, windowWidth, 'Stars Offset X' .. ': %.0f')
+	settings.starsPos.y = ui.slider('##' .. 'Stars Offset Y', settings.starsPos.y, 0, windowHeight, 'Stars Offset Y' .. ': %.0f')
+	settings.starsSize = ui.slider('##' .. 'Stars Size', settings.starsSize, 10, 50, 'Stars Size' .. ': %.0f')
+	ui.newLine()
 	ui.text('Preview : ')
     if ui.button('Message') then
         showPreviewMsg = not showPreviewMsg
-        if showPreviewMsg then showPreviewDistanceBar = false end
+        showPreviewDistanceBar = false
+		showPreviewStars = false
     end
     ui.sameLine()
     if ui.button('Distance Bar') then
         showPreviewDistanceBar = not showPreviewDistanceBar
-        if showPreviewDistanceBar then showPreviewMsg = false end
+        showPreviewMsg = false
+		showPreviewStars = false
     end
+	ui.sameLine()
+	if ui.button('Stars') then
+		showPreviewStars = not showPreviewStars
+		showPreviewMsg = false
+		showPreviewDistanceBar = false
+	end
     if showPreviewMsg then previewMSG() end
     if showPreviewDistanceBar then distanceBarPreview() end
-	ui.sameLine()
-	if ui.button('Offset X to center') then settings.msgOffsetX = windowWidth/2 end
+	if showPreviewStars then previewStars() end
 	ui.newLine()
+	if ui.button('MSG Offset X to center') then settings.msgOffsetX = windowWidth/2 end
 end
 
 
@@ -937,8 +1059,9 @@ local function settingsWindow()
 	ui.sameLine(10)
 	ui.beginGroup()
 	ui.newLine(15)
-	ui.sameLine(windowWidth/6 - 120)
-	if ui.button('Close', vec2(100, windowHeight/50)) then
+	ui.text('HUD :')
+	ui.sameLine(windowWidth/6 - windowWidth/20)
+	if ui.button('Close', vec2(windowWidth/25, windowHeight/50)) then
 		menuOpen = false
 		onSettingsChange()
 	end
@@ -1107,7 +1230,10 @@ local function sectorSelect()
 		end
 	end)
 	ui.sameLine(windowWidth/5 - 120)
-	if ui.button('Close', vec2(100, windowHeight/50)) then menuOpen = false end
+	if ui.button('Close', vec2(100, windowHeight/50)) then 
+		menuOpen = false
+		onSettingsChange()
+	end
 end
 
 local function sectorUI()
@@ -1138,6 +1264,7 @@ local function sectorUI()
 	end
 	discordLinks()
 	ui.endGroup()
+
 	return 1
 end
 
@@ -1167,12 +1294,14 @@ local function hasCrossedLine(line)
 end
 
 local function sectorUpdate()
+	if wheels[0].surfaceSectorID == 47 and wheels[1].surfaceSectorID == 47 and wheels[2].surfaceSectorID == 47 and wheels[3].surfaceSectorID == 47 then
+		resetSectors()
+	end
 	if sector == nil then
 		sector = sectors[1]
 		sectorInfo.sectorIndex = 1
 		resetSectors()
 	end
-	--if car.collidedWith == 0 and car.speedKmh > 60 and sectorInfo.sectorIndex == 4 then resetSectors() end
 	if distanceSquared(vec2(car.position.x, car.position.z), vec2(sector.lines[sectorInfo.checkpoints].midPoint.x, sector.lines[sectorInfo.checkpoints].midPoint.z)) < 30000 then sectorInfo.drawLine = true else sectorInfo.drawLine = false end
 	if hasCrossedLine(sector.lines[sectorInfo.checkpoints]) then
 		if sectorInfo.checkpoints == 1 then
@@ -1216,6 +1345,26 @@ local function sectorUpdate()
 		else sectorInfo.checkpoints = sectorInfo.checkpoints + 1 end
 	end
 	if sectorInfo.checkpoints > 1 and not sectorInfo.finished then textTimeFormat() end
+end
+
+local function drugDeliveryUpdate()
+	if not drugDelivery.started and distanceSquared(vec2(car.position.x, car.position.z), vec2(drugDelivery.pickUp.x, drugDelivery.pickUp.z)) < 30000 then drugDelivery.drawPickUp = true else drugDelivery.drawPickUp = false end
+	if distanceSquared(vec2(car.position.x, car.position.z), vec2(drugDelivery.dropOff.x, drugDelivery.dropOff.z)) < 30000 then drugDelivery.drawDropOff = true else drugDelivery.drawDropOff = false end
+	if isPointInCircle(car.position, drugDelivery.pickUp, 100) and car.speedKmh < 10 and not drugDelivery.active then
+		ac.sendChatMessage(" has picked up the drugs and is on the way to the drop off! (".. drugDelivery.dropOffName ..")")
+		drugDelivery.active = true
+	elseif isPointInCircle(car.position, drugDelivery.pickUp, 100) and drugDelivery.active and car.speedKmh > 10 then
+		drugDelivery.started = true
+	elseif drugDelivery.started and isPointInCircle(car.position, drugDelivery.dropOff, 100) and car.speedKmh < 10 then
+		ac.sendChatMessage(" has delivered the drugs and got away with it!")
+		drugDelivery.started = false
+		drugDelivery.active = false
+	end
+	if car.collidedWith ~= -1 and drugDelivery.started and not isPointInCircle(car.position, drugDelivery.dropOff, 500) and not isPointInCircle(car.position, drugDelivery.pickUp, 500) then
+		ac.sendChatMessage(" has crashed and lost the drugs!")
+		drugDelivery.started = false
+		drugDelivery.active = false
+	end
 end
 
 --------------------------------------------------------------------------------------- Race Opponent -----------------------------------------------------------------------------------------------
@@ -1264,11 +1413,11 @@ local timeStartRace = 0
 local function showRaceLights()
 	local timing = os.clock() % 1
 	if timing > 0.5 then
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/10,windowHeight), settings.colorHud, rgbm(),  rgbm(), settings.colorHud)
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/10,0), vec2(windowWidth,windowHeight),  rgbm(), settings.colorHud, settings.colorHud, rgbm())
+		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/10,windowHeight), settings.colorHud, rgbm(0,0,0,0),  rgbm(0,0,0,0), settings.colorHud)
+		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/10,0), vec2(windowWidth,windowHeight),  rgbm(0,0,0,0), settings.colorHud, settings.colorHud, rgbm(0,0,0,0))
 	else
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/10,windowHeight), rgbm(), rgbm(),  rgbm(), rgbm())
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/10,0), vec2(windowWidth,windowHeight),  rgbm(), rgbm(), rgbm(), rgbm())
+		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/10,windowHeight), rgbm(0,0,0,0), rgbm(0,0,0,0),  rgbm(0,0,0,0), rgbm(0,0,0,0))
+		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/10,0), vec2(windowWidth,windowHeight),  rgbm(0,0,0,0), rgbm(0,0,0,0), rgbm(0,0,0,0), rgbm(0,0,0,0))
 	end
 end
 
@@ -1557,39 +1706,52 @@ end
 
 --------------------------------------------------------------------------------- Drift -----------------------------------------------------------------------------------
 
+local function isDriftValid()
+	if car.driftInstantPoints == 0 then driftState.valid = true end
+	if wheels[0].surfaceSectorID == 47 and wheels[1].surfaceSectorID == 47 and wheels[2].surfaceSectorID == 47 and wheels[3].surfaceSectorID == 47 then
+		driftState.valid = false
+	end
+end
+
+local function isDriftValidSpot()
+	if wheels[0].surfaceGrip == 1 and wheels[1].surfaceGrip == 1 and wheels[2].surfaceGrip == 1 and wheels[3].surfaceGrip == 1 then
+		return false
+	end
+	if (not (car.position.x > 800 and car.position.x < 1050 and car.position.z > 2000 and car.position.z < 2250)
+	and not (car.position.x > -1006 and car.position.x < -79 and car.position.z > 1264 and car.position.z < 1431)) then
+		return true
+	else
+		return false
+	end
+end
+
 -- Disable drift event if car is in arena area
 local function driftUpdate(dt)
-	if not (car.position.x > -2320 and car.position.x < -3030 and car.position.z > 3595.5 and car.position.z < 3159.1)
-	and not (car.position.x > 800 and car.position.x < 1050 and car.position.z > 2000 and car.position.z < 2250) then
-		if driftState.lastScore ~= car.driftPoints then
-			if car.driftPoints - driftState.lastScore > driftState.bestScore then
-				driftState.bestScore = car.driftPoints - driftState.lastScore
-				playerData.Drift = math.floor(driftState.bestScore)
-				if driftState.bestScore > 100 then
-					ac.sendChatMessage("New Drift PB: " .. string.format("%d",driftState.bestScore) .. " pts !")
-					updatefirebase()
-				end
+	if driftState.lastScore ~= car.driftPoints then
+		if car.driftPoints - driftState.lastScore > driftState.bestScore and isDriftValidSpot() and driftState.valid then
+			driftState.bestScore = car.driftPoints - driftState.lastScore
+			playerData.Drift = math.floor(driftState.bestScore)
+			if driftState.bestScore > 100 then
+				ac.sendChatMessage("New Drift PB: " .. string.format("%d",driftState.bestScore) .. " pts !")
+				updatefirebase()
 			end
-			driftState.lastScore = car.driftPoints
 		end
+		driftState.lastScore = car.driftPoints
 	end
 end
 
 local function driftUI(textOffset)
 	local text
 	local colorCombo
-
-	if car.driftInstantPoints > 0 and (not (car.position.x > 800 and car.position.x < 1050 and car.position.z > 2000 and car.position.z < 2250)
-	and not (car.position.x < -2320 and car.position.x > -3030 and car.position.z < 3595.5 and car.position.z > 3159.1)) then
-		text = string.format("%.2f",car.driftInstantPoints) .. " pts"
+	if car.driftInstantPoints > 0 and isDriftValidSpot() and driftState.valid then
+		text = string.format("%d", car.driftInstantPoints) .. " pts"
 		colorCombo = rgbm(0, 1, 0, 0.9)
 	else
-		text = "PB: " .. string.format("%.2f",driftState.bestScore) .. " pts"
+		text = "PB: " .. string.format("%d", driftState.bestScore) .. " pts"
 		colorCombo = rgbm(1, 1, 1, 0.9)
 	end
 	local textSize = ui.measureDWriteText(text, settings.fontSize)
 	ui.dwriteDrawText(text, settings.fontSize, textOffset - vec2(textSize.x/2, -imageSize.y/13),  colorCombo)
-
 end
 
 -- UI Update
@@ -1598,11 +1760,11 @@ end
 local function flashingAlert(intensity)
 	local timing = os.clock() % 1
 	if timing > 0.5 then
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/intensity,windowHeight), rgbm(1, 0, 0, 0.5), rgbm(),  rgbm(), rgbm(1, 0, 0, 0.5))
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/intensity,0), vec2(windowWidth,windowHeight), rgbm(), rgbm(1, 0, 0, 0.5), rgbm(1, 0, 0, 0.5), rgbm())
+		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/intensity,windowHeight), rgbm(1, 0, 0, 0.5), rgbm(0,0,0,0),  rgbm(0,0,0,0), rgbm(1, 0, 0, 0.5))
+		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/intensity,0), vec2(windowWidth,windowHeight), rgbm(0,0,0,0), rgbm(1, 0, 0, 0.5), rgbm(1, 0, 0, 0.5), rgbm(0,0,0,0))
 	else
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/intensity,windowHeight), rgbm(), rgbm(),  rgbm(), rgbm())
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/intensity,0), vec2(windowWidth,windowHeight), rgbm(), rgbm(),  rgbm(), rgbm())
+		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/intensity,windowHeight), rgbm(0,0,0,0), rgbm(0,0,0,0),  rgbm(0,0,0,0), rgbm(0,0,0,0))
+		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/intensity,0), vec2(windowWidth,windowHeight), rgbm(0,0,0,0), rgbm(0,0,0,0),  rgbm(0,0,0,0), rgbm(0,0,0,0))
 	end
 end
 
@@ -1670,12 +1832,11 @@ end
 
 --------------------------------------------------------------------------------------- Police Chase --------------------------------------------------------------------------------------------------
 
-local online = {
-	message = "",
-	messageTimer = 0,
-	type = nil,
-	chased = false,
-	officer = nil,
+local policeLightsPos = {
+	vec2(0,0), 
+	vec2(windowWidth/15,windowHeight),
+	vec2(windowWidth-windowWidth/15,0),
+	vec2(windowWidth,windowHeight)
 }
 
 local acpPolice = ac.OnlineEvent({
@@ -1686,12 +1847,14 @@ local acpPolice = ac.OnlineEvent({
 	online.type = data.messageType
 	if data.yourIndex == car.sessionID and data.messageType == 0 then
 		online.message = data.message
-		online.messageTimer = settings.timeMsg
 		online.chased = true
 		online.officer = sender
-	elseif data.yourIndex == car.sessionID and data.messageType == 1 then
-		online.message = data.message
 		online.messageTimer = settings.timeMsg
+		policeLightsPos[2] = vec2(windowWidth/10,windowHeight)
+		policeLightsPos[3] = vec2(windowWidth-windowWidth/10,0)
+	elseif data.yourIndex == car.sessionID and data.messageType == 1 then
+		online.level = tonumber(data.message)
+		online.messageTimer = 3
 	elseif data.yourIndex == car.sessionID and data.messageType == 2 then
 		online.message = data.message
 		online.messageTimer = settings.timeMsg
@@ -1700,29 +1863,20 @@ local acpPolice = ac.OnlineEvent({
 		end
 		online.chased = false
 		online.officer = nil
+		online.level = 0
+		policeLightsPos[2] = vec2(windowWidth/6,windowHeight)
+		policeLightsPos[3] = vec2(windowWidth-windowWidth/6,0)
 	end
 end)
 
 local function showPoliceLights()
-	local timing = os.clock() % 2
-	if timing > 1.66 then
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/6,windowHeight), rgbm(1, 0, 0, 0.5), rgbm(),  rgbm(), rgbm(1, 0, 0, 0.5))
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/6,0), vec2(windowWidth,windowHeight),  rgbm(), rgbm(0, 0, 1, 0.5), rgbm(0, 0, 1, 0.5), rgbm())
-	elseif timing > 1.33 then
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/6,windowHeight), rgbm(0, 0, 1, 0.5), rgbm(), rgbm(), rgbm(0, 0, 1, 0.5))
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/6,0), vec2(windowWidth,windowHeight),  rgbm(), rgbm(1, 0, 0, 0.5), rgbm(1, 0, 0, 0.5), rgbm())
-	elseif timing > 1 then
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/6,windowHeight), rgbm(1, 0, 0, 0.5), rgbm(),  rgbm(), rgbm(1, 0, 0, 0.5))
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/6,0), vec2(windowWidth,windowHeight),  rgbm(), rgbm(0, 0, 1, 0.5), rgbm(0, 0, 1, 0.5), rgbm())
-	elseif timing > 0.66 then
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/6,windowHeight), rgbm(0, 0, 1, 0.5), rgbm(), rgbm(), rgbm(0, 0, 1, 0.5))
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/6,0), vec2(windowWidth,windowHeight),  rgbm(), rgbm(1, 0, 0, 0.5), rgbm(1, 0, 0, 0.5), rgbm())
-	elseif timing > 0.33 then
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/6,windowHeight), rgbm(1, 0, 0, 0.5), rgbm(),  rgbm(), rgbm(1, 0, 0, 0.5))
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/6,0), vec2(windowWidth,windowHeight),  rgbm(), rgbm(0, 0, 1, 0.5), rgbm(0, 0, 1, 0.5), rgbm())
+	local timing = math.floor(os.clock()*2 % 2)
+	if timing == 0 then
+		ui.drawRectFilledMultiColor(policeLightsPos[1], policeLightsPos[2], rgbm(1,0,0,0.5), rgbm(0,0,0,0), rgbm(0,0,0,0), rgbm(1,0,0,0.5))
+		ui.drawRectFilledMultiColor(policeLightsPos[3], policeLightsPos[4], rgbm(0,0,0,0), rgbm(0,0,1,0.5), rgbm(0,0,1,0.5), rgbm(0,0,0,0))
 	else
-		ui.drawRectFilledMultiColor(vec2(0,0), vec2(windowWidth/6,windowHeight), rgbm(0, 0, 1, 0.5), rgbm(), rgbm(), rgbm(0, 0, 1, 0.5))
-		ui.drawRectFilledMultiColor(vec2(windowWidth-windowWidth/6,0), vec2(windowWidth,windowHeight),  rgbm(), rgbm(1, 0, 0, 0.5), rgbm(1, 0, 0, 0.5), rgbm())
+		ui.drawRectFilledMultiColor(policeLightsPos[1], policeLightsPos[2], rgbm(0,0,1,0.5), rgbm(0,0,0,0), rgbm(0,0,0,0), rgbm(0,0,1,0.5))
+		ui.drawRectFilledMultiColor(policeLightsPos[3], policeLightsPos[4], rgbm(0,0,0,0), rgbm(1,0,0,0.5), rgbm(1,0,0,0.5), rgbm(0,0,0,0))
 	end
 end
 
@@ -1742,10 +1896,14 @@ end
 local function onlineEventMessageUI()
 	if online.messageTimer > 0 then
 		online.messageTimer = online.messageTimer - ui.deltaTime()
-		local text = string.gsub(online.message,"*", "⭐")
-		if online.message ~= "BUSTED!" then textWithBackground(text, 1) end
-		if online.type == 2 then
-			if online.message == "BUSTED!" then showArrestMSG() end
+		if online.type == 0 or online.type == 2 then
+			local text = online.message
+			if online.message ~= "BUSTED!" then textWithBackground(text, 1) end
+			if online.type == 2 then
+				if online.message == "BUSTED!" then showArrestMSG() end
+				showPoliceLights()
+			end
+		elseif online.type == 1 then
 			showPoliceLights()
 		end
 	elseif online.messageTimer < 0 then
@@ -1938,7 +2096,7 @@ end
 -------------------------------------------------------------------------------------------- Menu --------------------------------------------------------------------------------------------
 
 local initialized = false
-local menuSize = {vec2(windowWidth/5, windowHeight/4), vec2(windowWidth/6, windowHeight*1.8/3), vec2(windowWidth/3, windowHeight/3)}
+local menuSize = {vec2(windowWidth/5, windowHeight/4), vec2(windowWidth/6, windowHeight*2/3), vec2(windowWidth/3, windowHeight/3)}
 local currentTab = 1
 local buttonPressed = false
 
@@ -2128,28 +2286,184 @@ local function cpuOccupancyWindow()
 	end)
 end
 
+
+--------------------------------------------------------------------------------- Welcome Menu ---------------------------------------------------------------------------------
+
+local imageSize = vec2(windowWidth, windowHeight)
+
+
+local imgToDraw = {
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277327210549308/leftArrow.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277321896366080/rightArrow.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138283506410192906/leftBoxOff.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138283503042166834/centerBoxOff.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138283511443374090/rightBoxOff.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277324354228234/ACPmenu.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277320868757504/logo.png"
+}
+
+
+local boxActive = 0
+
+local imgColor = {
+	rgbm.colors.white,
+	rgbm.colors.white,
+	rgbm.colors.white,
+	rgbm.colors.white,
+	rgbm.colors.white,
+	settings.colorHud,
+	rgbm.colors.white,
+}
+
+-- Position for interaction with the image
+-- Position is based on the image size of 3340x1440
+local imgPos1440p = {
+	arrowL = vec4(70, 650, 320, 910),
+	arrowR = vec4(2230, 650, 2490, 910),
+	boxL = vec4(355, 325, 920, 1234),
+	boxC = vec4(993, 325, 1557, 1234),
+	boxR = vec4(1630, 325, 2195, 1234),
+	frame = vec4(31, 106, 2535, 1370),
+	close = vec4(2437, 48, 2510, 100),
+}
+
+-- Position adjusted for the current screen size (windowWidth, windowHeight)
+local imgPos = {
+	{vec2(imgPos1440p.arrowL.x*windowWidth/2560, imgPos1440p.arrowL.y*windowHeight/1440), vec2(imgPos1440p.arrowL.z*windowWidth/2560, imgPos1440p.arrowL.w*windowHeight/1440)},
+	{vec2(imgPos1440p.arrowR.x*windowWidth/2560, imgPos1440p.arrowR.y*windowHeight/1440), vec2(imgPos1440p.arrowR.z*windowWidth/2560, imgPos1440p.arrowR.w*windowHeight/1440)},
+	{vec2(imgPos1440p.boxL.x*windowWidth/2560, imgPos1440p.boxL.y*windowHeight/1440), vec2(imgPos1440p.boxL.z*windowWidth/2560, imgPos1440p.boxL.w*windowHeight/1440)},
+	{vec2(imgPos1440p.boxC.x*windowWidth/2560, imgPos1440p.boxC.y*windowHeight/1440), vec2(imgPos1440p.boxC.z*windowWidth/2560, imgPos1440p.boxC.w*windowHeight/1440)},
+	{vec2(imgPos1440p.boxR.x*windowWidth/2560, imgPos1440p.boxR.y*windowHeight/1440), vec2(imgPos1440p.boxR.z*windowWidth/2560, imgPos1440p.boxR.w*windowHeight/1440)},
+	{vec2(imgPos1440p.frame.x*windowWidth/2560, imgPos1440p.frame.y*windowHeight/1440), vec2(imgPos1440p.frame.z*windowWidth/2560, imgPos1440p.frame.w*windowHeight/1440)},
+	{vec2(imgPos1440p.close.x*windowWidth/2560, imgPos1440p.close.y*windowHeight/1440), vec2(imgPos1440p.close.z*windowWidth/2560, imgPos1440p.close.w*windowHeight/1440)},
+}
+
+
+local imgSet = {
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257702129254430/buyCar.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257701789507595/police.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257701445587026/earn.jpg",
+}
+
+local imgLink = {
+	"https://discord.com/channels/358562025032646659/1076123906362056784",
+	"https://discord.com/channels/358562025032646659/1095681142197325975",
+	"https://discord.com/channels/358562025032646659/1075156026992635995"
+}
+
+local imgDisplayed = {
+	1,
+	2,
+	3,
+}
+
+local textFrameTopR = imgPos[6][1] + vec2(windowHeight/100, windowHeight/100)
+local textFrameTopL = vec2(imgPos[6][2].x - windowHeight/80, imgPos[6][1].y + windowHeight/100)
+
+local function drawMenuText()
+	ui.popDWriteFont()
+	ui.pushDWriteFont("Orbitron;Weight=BLACK")
+	ui.dwriteDrawText("WELCOME BACK,", 20, textFrameTopR, rgbm.colors.white)
+	ui.dwriteDrawText(ac.getDriverName(0), 50, vec2(textFrameTopR.x, textFrameTopR.y + ui.measureDWriteText("WELCOME BACK,", 20).y), settings.colorHud)
+	ui.dwriteDrawText("CURRENT CAR", 20, vec2(textFrameTopL.x - ui.measureDWriteText("CURRENT CAR", 20).x, textFrameTopL.y), rgbm.colors.white)
+	ui.dwriteDrawText(ac.getCarName(0), 50, vec2(textFrameTopL.x - ui.measureDWriteText(ac.getCarName(0), 50).x, textFrameTopL.y + ui.measureDWriteText("CURRENT CAR", 20).y), settings.colorHud)
+	ui.popDWriteFont()
+end
+
+local function drawMenuImage()
+	local iconCloseColor = rgbm.colors.white
+	for i = 1, #imgColor - 1 do
+		if i == #imgColor - 1 then imgColor[i] = settings.colorHud
+		else imgColor[i] = rgbm.colors.white end
+	end
+	imgToDraw[3] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283506410192906/leftBoxOff.png"
+	imgToDraw[4] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283503042166834/centerBoxOff.png"
+	imgToDraw[5] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283511443374090/rightBoxOff.png"
+	ui.transparentWindow('welcomeIMG', vec2(0,0), vec2(windowWidth, windowHeight), true, function ()
+		ui.childWindow('welcomeIMGChild', vec2(windowWidth, windowHeight), true, function ()
+			local uiStats = ac.getUI()
+			ui.drawRectFilled(imgPos[6][1], imgPos[6][2], rgbm(0, 0, 0, 0.6))
+			ui.drawRectFilled(imgPos[7][1], imgPos[7][2], rgbm(0, 0, 0, 0.6))
+			if ui.rectHovered(imgPos[1][1], imgPos[1][2]) then
+				imgColor[1] = settings.colorHud
+				if uiStats.isMouseLeftKeyClicked then
+					for i = 1, #imgDisplayed do
+						if imgDisplayed[i] == #imgSet then
+							imgDisplayed[i] = 1
+						else
+							imgDisplayed[i] = imgDisplayed[i] + 1
+						end
+					end
+				end
+			elseif ui.rectHovered(imgPos[2][1], imgPos[2][2]) then
+				imgColor[2] = settings.colorHud
+				if uiStats.isMouseLeftKeyClicked then
+					for i = 1, #imgDisplayed do
+						if imgDisplayed[i] == 1 then
+							imgDisplayed[i] = #imgSet
+						else
+							imgDisplayed[i] = imgDisplayed[i] - 1
+						end
+					end
+				end
+			elseif ui.rectHovered(imgPos[3][1], imgPos[3][2]) then
+				imgColor[3] = settings.colorHud
+				imgToDraw[3] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283507643338842/leftBoxOn.png"
+				if uiStats.isMouseLeftKeyClicked then os.openURL(imgLink[imgDisplayed[1]]) end
+			elseif ui.rectHovered(imgPos[4][1], imgPos[4][2]) then
+				imgColor[4] = settings.colorHud
+				imgToDraw[4] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283504162066513/centerBoxOn.png"
+				if uiStats.isMouseLeftKeyClicked then os.openURL(imgLink[imgDisplayed[2]]) end
+			elseif ui.rectHovered(imgPos[5][1], imgPos[5][2]) then
+				imgColor[5] = settings.colorHud
+				imgToDraw[5] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283500697571348/rightBoxOn.png"
+				if uiStats.isMouseLeftKeyClicked then os.openURL(imgLink[imgDisplayed[3]]) end
+			elseif ui.rectHovered(imgPos[7][1], imgPos[7][2]) then
+				iconCloseColor = settings.colorHud
+				if uiStats.isMouseLeftKeyClicked then welcomeClosed = true end
+			end
+			ui.drawIcon(ui.Icons.Cancel, imgPos[7][1]+vec2(10,10), imgPos[7][2]-vec2(10,10), iconCloseColor)
+			for i = 1, #imgToDraw do ui.drawImage(imgToDraw[i], vec2(0,0), vec2(windowWidth, windowHeight), imgColor[i]) end
+			for i = 1, #imgSet do
+				if i == 1 then ui.drawImage(imgSet[imgDisplayed[i]], imgPos[3][1], imgPos[3][2], rgbm(1,1,1,1))
+				elseif i == 2 then ui.drawImage(imgSet[imgDisplayed[i]], imgPos[4][1], imgPos[4][2], rgbm(1,1,1,1))
+				elseif i == 3 then ui.drawImage(imgSet[imgDisplayed[i]], imgPos[5][1], imgPos[5][2], rgbm(1,1,1,1)) end
+			end
+		end)
+	end)
+	welcomeClosed = true
+end
+
+
+local function drawMenuWelcome()
+	drawMenuImage()
+	drawMenuText()
+end
+
 -------------------------------------------------------------------------------- UPDATE --------------------------------------------------------------------------------
 
 local firstLoad = true
 
 function script.drawUI()
 	if not welcomeClosed then welcomeWindow()
-	--elseif cpu99occupancy and showCPUoccupancy then cpuOccupancyWindow()
+	elseif cpu99occupancy and showCPUoccupancy then cpuOccupancyWindow()
 	elseif initialized then
 		if cspVersion < cspMinVersion then return end
 		if firstLoad then
 			updatePos()
 			firstLoad = false
 		end
-
+		if online.chased then showStarsPursuit() end	
 		hudUI()
 		onlineEventMessageUI()
 		raceUI()
+		if ac.isKeyPressed(ui.KeyIndex.P) then welcomeClosed = false end
 		if menuOpen then
 			ui.toolWindow('Menu', settings.menuPos, menuSize[currentTab], true, function ()
 				ui.childWindow('childMenu', menuSize[currentTab], true, function ()
 					menu()
 					moveMenu()
+					
 				end)
 			end)
 		end
@@ -2166,17 +2480,20 @@ function script.update(dt)
 		initialized = true
 		getFirebase()
 		loadLeaderboard()
+		initDrugRoute()
 	else
 		sectorUpdate()
 		raceUpdate(dt)
 		overtakeUpdate(dt)
 		driftUpdate(dt)
+		drugDeliveryUpdate()
 		--if sim.physicsLate > 45 and not cpu99occupancy then cpu99occupancy = true end
 	end
 end
 
 ac.onCarJumped(0, function (carid)
 	if carID ~= valideCar[1] and carID ~= valideCar[2] then
+		ac.log("Car Jumped")
 		resetSectors()
 		if online.chased and online.officer then
 			acpPolice{message = "TP", messageType = 0, yourIndex = online.officer.sessionID}
@@ -2184,11 +2501,24 @@ ac.onCarJumped(0, function (carid)
 	end
 end)
 
+ac.onChatMessage(function (message, senderCarIndex, senderSessionID)
+	if carID ~= valideCar[1] and carID ~= valideCar[2] and online.chased and online.officer then
+		if (senderSessionID == online.officer.sessionID and string.find(message, 'lost')) then
+			playerData.Getaway = playerData.Getaway + 1
+			online.chased = false
+			online.officer = nil
+			updatefirebase()
+		end
+	end
+end)
 
 function script.draw3D()
 	if initialized and settings.current == 4 then
 		local lineToRender = sector.pointsData[sectorInfo.checkpoints]
 		if sectorInfo.drawLine then render.debugLine(lineToRender[1], lineToRender[2], rgbm(0,100,0,1)) end
+		
+		if drugDelivery.drawPickUp then render.circle(drugDelivery.pickUp, vec3(0,1,0), 5, rgbm(0,100,0,1))
+		elseif drugDelivery.drawDropOff then render.circle(drugDelivery.dropOff, vec3(0,1,0), 5, rgbm(0,100,0,1)) end
 	end
 end
 
