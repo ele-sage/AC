@@ -1,3 +1,15 @@
+local staffID = {"76561199125972202", "76561199012836734", "76561198036229857", "76561198081667660", "76561197979739646", "76561199070560482", "76561197985451774", "76561198113108587", "76561197997930988"}
+local steamID = ac.getUserSteamID()
+
+for i = 1, #staffID do
+	if steamID == staffID[i] then
+		break
+	end
+	if i == #staffID then
+		return
+	end
+end
+
 local class = 'C'
 local timeRequirement = 150
 local sim = ac.getSim()
@@ -11,8 +23,6 @@ local cspMinVersion = 2144
 local valideCar = {"chargerpolice_acpursuit", "crown_police"}
 local fontMultiplier = windowHeight/1440
 local carID = ac.getCarID(0)
-local cspAboveP218 = cspVersion >= 2363
-local emile = ac.getUserSteamID() == "76561199125972202"
 local wheels = car.wheels
 
 if carID == valideCar[1] or carID == valideCar[2] or cspVersion < cspMinVersion then return end
@@ -237,9 +247,6 @@ local imageSize = vec2(0,0)
 
 local imgPos = {}
 
-local cpu99occupancy = false
-local showCPUoccupancy = true
-
 local hudBase = "https://cdn.discordapp.com/attachments/1130004696984203325/1130004776688553994/hudBase.png"
 local hudLeft = "https://cdn.discordapp.com/attachments/1130004696984203325/1130004777229623306/hudLeft.png"
 local hudRight = "https://cdn.discordapp.com/attachments/1130004696984203325/1130004777485471754/hudRight.png"
@@ -249,45 +256,45 @@ local hudMenu = "https://cdn.discordapp.com/attachments/1130004696984203325/1130
 local hudRanks = "https://cdn.discordapp.com/attachments/1130004696984203325/1130004778315944017/iconRanks.png"
 local hudTheft = "https://cdn.discordapp.com/attachments/1130004696984203325/1130004776399151144/iconTheft.png"
 
-local classC = {
-	["22b_acpursuit"]= "Impreza 22B STI",
-	["370z_acp"]= "370Z",
-	["964turbo_acp23"]= "964 Turbo",
-	["gt86_acp23"]= "GT86",
-	["e46acpursuit"]= "M3 E46",
-	["is300_acp"]= "IS300",
-	["lancerix_acpursuit"]= "Lancer Evo IX",
-	["rx7_2_acpursuit"]= "RX-7",
-	["s15_acp"]= "Silvia S15",
-	["skyr34_acp2"]= "Skyline R34",
-	["supra93_acpursuit"]= "Supra Mk4",
-	["mustang_acp"]= "Mustang",
-	["nsx94_acp23"]= "NSX",
-}
+-- local classC = {
+-- 	["22b_acpursuit"]= "Impreza 22B STI",
+-- 	["370z_acp"]= "370Z",
+-- 	["964turbo_acp23"]= "964 Turbo",
+-- 	["gt86_acp23"]= "GT86",
+-- 	["e46acpursuit"]= "M3 E46",
+-- 	["is300_acp"]= "IS300",
+-- 	["lancerix_acpursuit"]= "Lancer Evo IX",
+-- 	["rx7_2_acpursuit"]= "RX-7",
+-- 	["s15_acp"]= "Silvia S15",
+-- 	["skyr34_acp2"]= "Skyline R34",
+-- 	["supra93_acpursuit"]= "Supra Mk4",
+-- 	["mustang_acp"]= "Mustang",
+-- 	["nsx94_acp23"]= "NSX",
+-- }
 
-local classB = {
-	["911gt3992_acpursuit"]= "911 GT3 (992)",
-	["f40_acp2023"]= "F40",
-	["gtam_acp"]= "Giulia GTA",
-	["gtr_acp2023"]= "R35 Nismo",
-	["hellcat_acp2023"]= "Challenger",
-	["m4_acp23"]= "M4",
-	["murcielago_acp23"]= "Murcielago",
-	["rs6abt_acp"]= "RS6 ABT",
-	["amgtr_acp23"]= "AMG GT-R",
-}
+-- local classB = {
+-- 	["911gt3992_acpursuit"]= "911 GT3 (992)",
+-- 	["f40_acp2023"]= "F40",
+-- 	["gtam_acp"]= "Giulia GTA",
+-- 	["gtr_acp2023"]= "R35 Nismo",
+-- 	["hellcat_acp2023"]= "Challenger",
+-- 	["m4_acp23"]= "M4",
+-- 	["murcielago_acp23"]= "Murcielago",
+-- 	["rs6abt_acp"]= "RS6 ABT",
+-- 	["amgtr_acp23"]= "AMG GT-R",
+-- }
 
-local function verifyClass()
-	if classC[carID] then
-		class = "C"
-		timeRequirement = 150
-	elseif classB[carID] then
-		class = "B"
-		timeRequirement = 130
-	end
-	table.clear(classC)
-	table.clear(classB)
-end
+-- local function verifyClass()
+-- 	if classC[carID] then
+-- 		class = "C"
+-- 		timeRequirement = 150
+-- 	elseif classB[carID] then
+-- 		class = "B"
+-- 		timeRequirement = 130
+-- 	end
+-- 	table.clear(classC)
+-- 	table.clear(classB)
+-- end
 
 local playerData = {}
 
@@ -321,7 +328,7 @@ local sectors  = {
 		linesData = {vec4(-3944.9,10004.4,-3951.9,10007.2),
 					vec4(-5774.6,10183.9,-5776.7,10173.8),
 					vec4(-3977.2,9537.4,-3969.2,9540.2)},
-		length = 4,
+		length = 6.5,
 	},
 	{
 		name = 'JDM LEGENDS',
@@ -359,23 +366,23 @@ local drugAccessPointsName = {
 	"Gas Station 1",
 	"Street Runners",
 	"Gas Station 2",
-	"MC Danalds 1",
+	"McDanalds 3",
 	"Road Criminals",
-	"MC Danalds 2",
-	"Gas Station 3",
+	"McDanalds 4",
+	"Gas Station 5",
 	"Reckless Renegades",
 	"Motion Masters",
-	"Restaurants 1",
-	"Restaurants 2",
-	"Restaurants 3",
-	"Restaurants 4",
-	"Restaurants 5",
-	"Restaurants 6",
-	"Restaurants 7",
-	"MC Danalds 3",
-	"Restaurants 8",
-	"MC Danalds 4",
-	"Restaurants 9",
+	"restaurant 4",
+	"restaurant 7",
+	"McDanalds 7",
+	"restaurant 9",
+	"restaurant 11",
+	"restaurant 13",
+	"restaurant 14",
+	"McDanalds 8",
+	"restaurant 15",
+	"McDanalds 9",
+	"restaurant 16",
 }
 
 local drugAccessPoints = {
@@ -410,6 +417,8 @@ local drugDelivery = {
 	started = false,
 	drawPickUp = false,
 	drawDropOff = false,
+	timer = 0,
+	distance = 0,
 }
 
 local sector = nil
@@ -537,14 +546,23 @@ local function initLines()
 	updatePos()
 end
 
-local function initDrugRoute()
-	local accessPoint = tonumber(os.date("%d")) % #drugAccessPoints + 1
+local function randNum(seed)
+	local date = os.date("%m%d%Y")
+	local num = 0
+	for i = 1, #date do
+		num = num + tonumber(date:sub(i,i))
+	end
+	num = num + seed
+	num = num % 20
+	num = num + 1
+	return num
+end
 
+local function initDrugRoute()
+	local accessPoint = randNum(0)
 	drugDelivery.pickUp = drugAccessPoints[accessPoint]
 	drugDelivery.pickUpName = drugAccessPointsName[accessPoint]
-	local deliveryPoint = tonumber(os.date("%d")) * accessPoint % 4 + 3
-	ac.log(deliveryPoint)
-	ac.log(accessPoint)
+	local deliveryPoint = randNum(accessPoint) % 4 + 3
 	if (accessPoint + deliveryPoint) > #drugAccessPoints then
 		deliveryPoint = accessPoint + deliveryPoint - #drugAccessPoints
 	else
@@ -552,8 +570,6 @@ local function initDrugRoute()
 	end
 	drugDelivery.dropOff = drugAccessPoints[deliveryPoint]
 	drugDelivery.dropOffName = drugAccessPointsName[deliveryPoint]
-	ac.log(ac.trackCoordinateToWorld(car.position))
-	ac.log(ac.getCameraForward())
 end
 
 
@@ -620,7 +636,7 @@ local function parsesettings(table)
 	end
 end
 
-local function addPlayerToDataBase(steamID)
+local function addPlayerToDataBase()
 	local name = ac.getDriverName(0)
 	local str = '{"' .. steamID .. '": {"Name":"' .. name .. '","Getaway": 0,"Drift": 0,"Overtake": 0,"Wins": 0,"Losses": 0,"Busted": 0,"Arrests": 0,"Theft": 0,"Sectors": {"H1": {},"VV": {},"BOB": {}}}}'
 	web.request('PATCH', firebaseUrl .. nodes["Players"] .. ".json", str, function(err, response)
@@ -631,7 +647,7 @@ local function addPlayerToDataBase(steamID)
 	end)
 end
 
-local function addPlayersettingsToDataBase(steamID)
+local function addPlayersettingsToDataBase()
 	local str = '{"' .. steamID .. '": {"essentialSize":20,"policeSize":20,"hudOffsetX":0,"hudOffsetY":0,"fontSize":20,"current":1,"colorHud":"1,0,0,1","timeMsg":10,"msgOffsetY":10,"msgOffsetX":' .. windowWidth/2 .. ',"fontSizeMSG":30,"menuPos":"0,0","unit":"km/h","unitMult":1,"starsSize":20}}'
 	web.request('PATCH', firebaseUrl .. nodes["Settings"] .. ".json", str, function(err, response)
 		if err then
@@ -657,14 +673,14 @@ local function timeFormat(sec)
 end
 
 local function getFirebase()
-	local url = firebaseUrl .. nodes["Players"] .. "/" .. ac.getUserSteamID() .. '.json'
+	local url = firebaseUrl .. nodes["Players"] .. "/" .. steamID .. '.json'
 	web.get(url, function(err, response)
 		if err then
 			print(err)
 			return
 		else
 			if response.body == 'null' then
-				addPlayerToDataBase(ac.getUserSteamID())
+				addPlayerToDataBase(steamID)
 			else
 				local jString = response.body
 				playerData = json.parse(jString)
@@ -681,9 +697,6 @@ local function getFirebase()
 				else
 					highestScore = playerData.Overtake
 				end
-				if not playerData.Getaway then
-					playerData.Getaway = 0
-				end
 			end
 			ac.log('Player data loaded')
 		end
@@ -691,14 +704,14 @@ local function getFirebase()
 end
 
 local function loadSettings()
-	local url = firebaseUrl .. nodes["Settings"] .. "/" .. ac.getUserSteamID() .. '.json'
+	local url = firebaseUrl .. nodes["Settings"] .. "/" .. steamID .. '.json'
 	web.get(url, function(err, response)
 		if err then
 			print(err)
 			return
 		else
 			if response.body == 'null' then
-				addPlayersettingsToDataBase(ac.getUserSteamID())
+				addPlayersettingsToDataBase(steamID)
 			else
 				ac.log("settings loaded")
 				local jString = response.body
@@ -710,7 +723,7 @@ local function loadSettings()
 end
 
 local function updateSettings()
-	local str = '{"' .. ac.getUserSteamID() .. '": ' .. json.stringify(settingsJSON) .. '}'
+	local str = '{"' .. steamID .. '": ' .. json.stringify(settingsJSON) .. '}'
 	web.request('PATCH', firebaseUrl .. nodes["Settings"] .. ".json", str, function(err, response)
 		if err then
 			print(err)
@@ -811,7 +824,7 @@ local function updateSheets()
 end
 
 local function updatefirebase()
-	local str = '{"' .. ac.getUserSteamID() .. '": ' .. json.stringify(playerData) .. '}'
+	local str = '{"' .. steamID .. '": ' .. json.stringify(playerData) .. '}'
 	ac.log(str)
 	web.request('PATCH', firebaseUrl  .. nodes["Players"] .. ".json", str, function(err, response)
 		if err then
@@ -1314,9 +1327,6 @@ local function sectorUpdate()
 					if class == "C" and timeRequirement > sectorInfo.time then
 						playerData.Theft = playerData.Theft + 1
 						ac.sendChatMessage(" has successfully stolen a " .. string.gsub(ac.getCarName(0), "%W", " ") .. " and got away with it!")
-					elseif class == "B" and timeRequirement > sectorInfo.time then
-						playerData.Theft = playerData.Theft + 1
-						ac.sendChatMessage(" has successfully stolen a " .. string.gsub(ac.getCarName(0), "%W", " ") .. " and got away with it!")
 					else
 						ac.sendChatMessage(" has failed to steal a " .. string.gsub(ac.getCarName(0), "%W", " ") .. " under the time limit!")
 					end
@@ -1347,24 +1357,56 @@ local function sectorUpdate()
 	if sectorInfo.checkpoints > 1 and not sectorInfo.finished then textTimeFormat() end
 end
 
-local function drugDeliveryUpdate()
+local function resetDrugDelivery()
+	drugDelivery.active = false
+	drugDelivery.started = false
+	drugDelivery.timer = 0
+end
+
+local function drugDeliveryUI()
+	if drugDelivery.active and not drugDelivery.started then
+		textWithBackground("You just picked up some drugs! Deliver them to this location : " .. drugDelivery.dropOffName .. "!", 1)
+	elseif drugDelivery.started then
+		textWithBackground("You are on the way to deliver the drugs to " .. drugDelivery.dropOffName .. "!", 1)
+	end
+end
+
+local function drawDrugLocations()
 	if not drugDelivery.started and distanceSquared(vec2(car.position.x, car.position.z), vec2(drugDelivery.pickUp.x, drugDelivery.pickUp.z)) < 30000 then drugDelivery.drawPickUp = true else drugDelivery.drawPickUp = false end
 	if distanceSquared(vec2(car.position.x, car.position.z), vec2(drugDelivery.dropOff.x, drugDelivery.dropOff.z)) < 30000 then drugDelivery.drawDropOff = true else drugDelivery.drawDropOff = false end
-	if isPointInCircle(car.position, drugDelivery.pickUp, 100) and car.speedKmh < 10 and not drugDelivery.active then
-		ac.sendChatMessage(" has picked up the drugs and is on the way to the drop off! (".. drugDelivery.dropOffName ..")")
+end
+
+local function drugAvgSpeedValid()
+	if drugDelivery.timer > 0 then
+		local routeLength = car.distanceDrivenSessionKm - drugDelivery.distance
+		local avgSpeed = routeLength * 3600 / drugDelivery.timer
+		resetDrugDelivery()
+		if avgSpeed > 100 then return true end
+	end
+	return false
+end
+
+local function drugDeliveryUpdate(dt)
+	drawDrugLocations()
+	if not drugDelivery.active and car.speedKmh < 5 and isPointInCircle(car.position, drugDelivery.pickUp, 100) then
+		resetDrugDelivery()
 		drugDelivery.active = true
-	elseif isPointInCircle(car.position, drugDelivery.pickUp, 100) and drugDelivery.active and car.speedKmh > 10 then
+		drugDelivery.distance = car.distanceDrivenSessionKm
+	elseif not drugDelivery.started and drugDelivery.active and car.speedKmh > 5 and isPointInCircle(car.position, drugDelivery.pickUp, 100) then
+		ac.sendChatMessage(" has picked up the drugs and is on the way to the drop off! (".. drugDelivery.dropOffName ..")")
 		drugDelivery.started = true
-	elseif drugDelivery.started and isPointInCircle(car.position, drugDelivery.dropOff, 100) and car.speedKmh < 10 then
-		ac.sendChatMessage(" has delivered the drugs and got away with it!")
-		drugDelivery.started = false
-		drugDelivery.active = false
+	elseif drugDelivery.started and car.speedKmh < 10 and isPointInCircle(car.position, drugDelivery.dropOff, 100) then
+		if drugAvgSpeedValid() then
+			ac.sendChatMessage(" has delivered the drugs and got away with it!")
+		else
+			ac.sendChatMessage(" was too slow and got caught by the cops with the drugs!")
+		end
 	end
 	if car.collidedWith ~= -1 and drugDelivery.started and not isPointInCircle(car.position, drugDelivery.dropOff, 500) and not isPointInCircle(car.position, drugDelivery.pickUp, 500) then
 		ac.sendChatMessage(" has crashed and lost the drugs!")
-		drugDelivery.started = false
-		drugDelivery.active = false
+		resetDrugDelivery()
 	end
+	if drugDelivery.started then drugDelivery.timer = drugDelivery.timer + dt end
 end
 
 --------------------------------------------------------------------------------------- Race Opponent -----------------------------------------------------------------------------------------------
@@ -1584,7 +1626,6 @@ local comboMeter = 1
 local comboColor = 0
 local dangerouslySlowTimer = 0
 local carsState = {}
-local wheelsWarningTimeout = 0
 
 
 local function overtakeUpdate(dt)
@@ -1605,17 +1646,8 @@ local function overtakeUpdate(dt)
     local comboFadingRate = 0.5 * math.lerp(1, 0.1, math.lerpInvSat(car.speedKmh, 80, 200)) + car.wheelsOutside
     comboMeter = math.max(1, comboMeter - dt * comboFadingRate)
 
-    local sim = ac.getSim()
     while sim.carsCount > #carsState do
         carsState[#carsState + 1] = {}
-    end
-
-    if wheelsWarningTimeout > 0 then
-        wheelsWarningTimeout = wheelsWarningTimeout - dt
-    elseif car.wheelsOutside > 0 then
-        if wheelsWarningTimeout == 0 then
-        end
-        wheelsWarningTimeout = 60
     end
 
     if car.speedKmh < requiredSpeed then
@@ -1636,7 +1668,7 @@ local function overtakeUpdate(dt)
         dangerouslySlowTimer = 0
     end
 
-    for i = 1, ac.getSim().carsCount - 1 do	
+    for i = 1, ac.getSim().carsCount - 1 do
         local state = carsState[i]
 		local otherCar = ac.getCar(i)
         if otherCar.isConnected and otherCar.position:closerToThan(car.position, 10) then
@@ -1688,7 +1720,6 @@ local function overtakeUpdate(dt)
     end
 end
 
-local speedWarning = 0
 local function overtakeUI(textOffset)
 	local text
 	local colorCombo
@@ -1727,6 +1758,7 @@ end
 
 -- Disable drift event if car is in arena area
 local function driftUpdate(dt)
+	isDriftValid()
 	if driftState.lastScore ~= car.driftPoints then
 		if car.driftPoints - driftState.lastScore > driftState.bestScore and isDriftValidSpot() and driftState.valid then
 			driftState.bestScore = car.driftPoints - driftState.lastScore
@@ -2095,6 +2127,7 @@ end
 
 -------------------------------------------------------------------------------------------- Menu --------------------------------------------------------------------------------------------
 
+local firstLoad = true
 local initialized = false
 local menuSize = {vec2(windowWidth/5, windowHeight/4), vec2(windowWidth/6, windowHeight*2/3), vec2(windowWidth/3, windowHeight/3)}
 local currentTab = 1
@@ -2118,141 +2151,6 @@ local function leaderboardWindow()
 		ui.childWindow('childLeaderboard', vec2(windowWidth/2, windowHeight/2), true, function ()
 			showLeaderboard()
 			moveMenu()
-		end)
-	end)
-end
-
--------------------------------------------------------------------------------------------- Main script --------------------------------------------------------------------------------------------
-
-local welcomeMessages = {"\nWELCOME TO ASSETTO CORSA PURSUIT SERVER!",
-	"We're the first persistent Assetto Corsa server to combine a (Points System) with the driving experience. ",
-	"Earned points function like real-life currency, allowing you to buy and customize cars: ",
-	"► CRUSHING KILOMETERS ",
-	"This is the primary way to earn money on the server. ",
-	"Simply drive on the server, then confirm your milestones on Discord to receive points. ",
-	"All the information is available in the: ",
-	"► STEALING CARS ",
-	"Click on the (THEFT) icon in the ACP essential app on your screen to steal a car. ",
-	"You must bring the car to Bob's scrapyard within a certain time limit. The timer starts after the Bank. ",
-	"So, click (THEFT) and run!",
-	"Find more information in the: ",
-	"► STREET RACING ",
-	"Challenge another player by double-tapping the horn button while you're behind them. ",
-	"They will receive a warning message and can accept your challenge by double-tapping their horn as well. ",
-	"Learn more in the: ",
-	"► HORIZON FESTIVAL ",
-	"The Horizon Festival keeps track of your criminal activities in the metropolis and ranks them on a leaderboard. ",
-	"The higher you rank in the various competitions, the more points you'll earn on this ULTIMATE leaderboard! ",
-	"Being on the Horizon Leaderboard unlocks special prizes like cars. ",
-	"Find additional details in the: ",
-	"If you're experiencing a 99% CPU WARNING, try loading one of these presets: ",
-	"Visit our Official Discord and check out the Server FAQ for more information: "}
-
-local function welcomeMessageUI()
-	ui.sameLine(windowWidth/10)
-	ui.beginGroup()
-	ui.popDWriteFont()
-	ui.pushDWriteFont("Orbitron;Weight=BLACK")
-	ui.dwriteTextWrapped(welcomeMessages[1], 50, rgbm.colors.orange)
-	local titleSize = ui.measureDWriteText(welcomeMessages[1], 50)
-	ui.popDWriteFont()
-	ui.pushDWriteFont("Orbitron;Weight=REGULAR")
-	ui.newLine(50)
-	ui.dwriteTextWrapped(welcomeMessages[2], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[3], 25, rgbm.colors.white)
-	ui.sameLine()
-	if 2362 < cspVersion then
-		if ui.dwriteTextHyperlink('CAR DEALER CHANNEL', 25, rgbm.colors.orange) then os.openURL("https://discord.com/channels/358562025032646659/1076123906362056784") end
-	else
-		if ui.textHyperlink('ACP POINTS SYSTEM') then os.openURL("https://discord.com/channels/358562025032646659/1059795376879714364") end
-	end
-	ui.newLine()
-	ui.dwriteTextWrapped(welcomeMessages[4], 40, rgbm.colors.white)
-	ui.beginSubgroup(windowWidth/50)
-	ui.dwriteTextWrapped(welcomeMessages[5], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[6], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[7], 25, rgbm.colors.white)
-	ui.sameLine()
-	if 2362 < cspVersion then
-		if ui.dwriteTextHyperlink('DRIVEN-KM CHANNEL', 25, rgbm.colors.orange) then os.openURL("https://discord.com/channels/358562025032646659/1076123906362056784") end
-	else
-		if ui.textHyperlink('DRIVEN-KM CHANNEL') then os.openURL("https://discord.com/channels/358562025032646659/1059795376879714364") end
-	end
-	ui.endSubgroup()
-	ui.newLine()
-	ui.dwriteTextWrapped(welcomeMessages[8], 40, rgbm.colors.white)
-	ui.beginSubgroup(windowWidth/50)
-	ui.dwriteTextWrapped(welcomeMessages[9], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[10], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[11], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[12], 25, rgbm.colors.white)
-	ui.sameLine()
-	if 2362 < cspVersion then
-		if ui.dwriteTextHyperlink('CAR-THEFT CHANNEL', 25, rgbm.colors.orange) then os.openURL("https://discord.com/channels/358562025032646659/1076123906362056784") end
-	else
-		if ui.textHyperlink('CAR-THEFT CHANNEL') then os.openURL("https://discord.com/channels/358562025032646659/1059795376879714364") end
-	end
-	ui.endSubgroup()
-	ui.newLine()
-	ui.dwriteTextWrapped(welcomeMessages[13], 40, rgbm.colors.white)
-	ui.beginSubgroup(windowWidth/50)
-	ui.dwriteTextWrapped(welcomeMessages[14], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[15], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[16], 25, rgbm.colors.white)
-	ui.sameLine()
-	if 2362 < cspVersion then
-		if ui.dwriteTextHyperlink('STREET RACING CHANNEL', 25, rgbm.colors.orange) then os.openURL("https://discord.com/channels/358562025032646659/1076123906362056784") end
-	else
-		if ui.textHyperlink('STREET RACING CHANNEL') then os.openURL("https://discord.com/channels/358562025032646659/1059795376879714364") end
-	end
-	ui.endSubgroup()
-	ui.newLine()
-	ui.dwriteTextWrapped(welcomeMessages[17], 40, rgbm.colors.white)
-	ui.beginSubgroup(windowWidth/50)
-	ui.dwriteTextWrapped(welcomeMessages[18], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[19], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[20], 25, rgbm.colors.white)
-	ui.dwriteTextWrapped(welcomeMessages[21], 25, rgbm.colors.white)
-	ui.sameLine()
-	if 2362 < cspVersion then
-		if ui.dwriteTextHyperlink('HORIZON CHANNEL', 25, rgbm.colors.orange) then os.openURL("https://discord.com/channels/358562025032646659/1127619394328076318") end
-	else
-		if ui.textHyperlink('HORIZON CHANNEL') then os.openURL("https://discord.com/channels/358562025032646659/1127619394328076318") end
-	end
-	ui.endSubgroup()
-	ui.newLine()
-	ui.dwriteTextWrapped(welcomeMessages[22], 25, rgbm.colors.white)
-	ui.sameLine()
-	if 2362 < cspVersion then
-		if ui.dwriteTextHyperlink('FPS BOOST CHANNEL', 25, rgbm.colors.orange) then os.openURL("https://discord.com/channels/358562025032646659/1053427131222343811") end
-	else
-		if ui.textHyperlink('FPS BOOST CHANNEL') then os.openURL("https://discord.com/channels/358562025032646659/1053427131222343811") end
-	end
-	ui.dwriteTextWrapped(welcomeMessages[23], 25, rgbm.colors.white)
-	ui.sameLine()
-	if 2362 < cspVersion then
-		if ui.dwriteTextHyperlink('DISCORD | FAQ', 25, rgbm.colors.orange) then os.openURL("https://discord.com/channels/358562025032646659/1062186611091185784") end
-	else
-		if ui.textHyperlink('DISCORD | FAQ') then os.openURL("https://discord.com/channels/358562025032646659/1062186611091185784") end
-	end
-	ui.newLine(50)
-	ui.newLine()
-	ui.sameLine(windowWidth/20)
-	if ui.button('Close', vec2(windowWidth/2, windowHeight/15)) then welcomeClosed = true end
-	ui.endGroup()
-end
-
-local function welcomeWindow()
-	ui.transparentWindow('WelcomeWindow', vec2(windowWidth/10, windowHeight/100), vec2(windowWidth-windowWidth/5, windowHeight-windowHeight/50), true, function ()
-		ui.childWindow('childWelcome', vec2(), true, function ()
-			ui.drawRectFilled(vec2(), vec2(windowWidth-windowWidth/5, windowHeight-windowHeight/50), rgbm(0, 0, 0, 0.8), 20)
-			if cspVersion >= cspMinVersion then welcomeMessageUI()
-			else
-				ui.dwriteTextWrapped("You are using an old version of CSP. Please update CSP to the latest version to use the ACP Essential APP.", 25, rgbm.colors.white)
-				ui.newLine()
-				ui.sameLine(windowWidth/20)
-				if ui.button('Close', vec2(windowWidth/2, windowHeight/20)) then welcomeClosed = true end
-			end
 		end)
 	end)
 end
@@ -2286,11 +2184,7 @@ local function cpuOccupancyWindow()
 	end)
 end
 
-
 --------------------------------------------------------------------------------- Welcome Menu ---------------------------------------------------------------------------------
-
-local imageSize = vec2(windowWidth, windowHeight)
-
 
 local imgToDraw = {
 	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277327210549308/leftArrow.png",
@@ -2301,9 +2195,6 @@ local imgToDraw = {
 	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277324354228234/ACPmenu.png",
 	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277320868757504/logo.png"
 }
-
-
-local boxActive = 0
 
 local imgColor = {
 	rgbm.colors.white,
@@ -2337,7 +2228,6 @@ local imgPos = {
 	{vec2(imgPos1440p.frame.x*windowWidth/2560, imgPos1440p.frame.y*windowHeight/1440), vec2(imgPos1440p.frame.z*windowWidth/2560, imgPos1440p.frame.w*windowHeight/1440)},
 	{vec2(imgPos1440p.close.x*windowWidth/2560, imgPos1440p.close.y*windowHeight/1440), vec2(imgPos1440p.close.z*windowWidth/2560, imgPos1440p.close.w*windowHeight/1440)},
 }
-
 
 local imgSet = {
 	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257702129254430/buyCar.jpg",
@@ -2442,28 +2332,25 @@ end
 
 -------------------------------------------------------------------------------- UPDATE --------------------------------------------------------------------------------
 
-local firstLoad = true
-
 function script.drawUI()
-	if not welcomeClosed then welcomeWindow()
-	elseif cpu99occupancy and showCPUoccupancy then cpuOccupancyWindow()
+	if not welcomeClosed then drawMenuWelcome()
 	elseif initialized then
 		if cspVersion < cspMinVersion then return end
 		if firstLoad then
 			updatePos()
 			firstLoad = false
 		end
-		if online.chased then showStarsPursuit() end	
+		if online.chased then showStarsPursuit() end
 		hudUI()
 		onlineEventMessageUI()
 		raceUI()
+		drugDeliveryUI()
 		if ac.isKeyPressed(ui.KeyIndex.P) then welcomeClosed = false end
 		if menuOpen then
 			ui.toolWindow('Menu', settings.menuPos, menuSize[currentTab], true, function ()
 				ui.childWindow('childMenu', menuSize[currentTab], true, function ()
 					menu()
 					moveMenu()
-					
 				end)
 			end)
 		end
@@ -2476,7 +2363,6 @@ function script.update(dt)
 		if carID == valideCar[1] or carID == valideCar[2] or cspVersion < cspMinVersion then return end
 		loadSettings()
 		initLines()
-		verifyClass()
 		initialized = true
 		getFirebase()
 		loadLeaderboard()
@@ -2486,8 +2372,7 @@ function script.update(dt)
 		raceUpdate(dt)
 		overtakeUpdate(dt)
 		driftUpdate(dt)
-		drugDeliveryUpdate()
-		--if sim.physicsLate > 45 and not cpu99occupancy then cpu99occupancy = true end
+		drugDeliveryUpdate(dt)
 	end
 end
 
@@ -2516,7 +2401,6 @@ function script.draw3D()
 	if initialized and settings.current == 4 then
 		local lineToRender = sector.pointsData[sectorInfo.checkpoints]
 		if sectorInfo.drawLine then render.debugLine(lineToRender[1], lineToRender[2], rgbm(0,100,0,1)) end
-		
 		if drugDelivery.drawPickUp then render.circle(drugDelivery.pickUp, vec3(0,1,0), 5, rgbm(0,100,0,1))
 		elseif drugDelivery.drawDropOff then render.circle(drugDelivery.dropOff, vec3(0,1,0), 5, rgbm(0,100,0,1)) end
 	end
