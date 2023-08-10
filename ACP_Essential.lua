@@ -16,6 +16,7 @@ local sim = ac.getSim()
 local car = ac.getCar(0)
 local windowWidth = sim.windowWidth/ac.getUI().uiScale
 local windowHeight = sim.windowHeight/ac.getUI().uiScale
+local is16_9 = windowWidth/windowHeight == 16/9
 local menuOpen = false
 local leaderboardOpen = false
 local cspVersion = ac.getPatchVersionCode()
@@ -2187,13 +2188,13 @@ end
 --------------------------------------------------------------------------------- Welcome Menu ---------------------------------------------------------------------------------
 
 local imgToDraw = {
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277327210549308/leftArrow.png",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277321896366080/rightArrow.png",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138283506410192906/leftBoxOff.png",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138283503042166834/centerBoxOff.png",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138283511443374090/rightBoxOff.png",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277324354228234/ACPmenu.png",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138277320868757504/logo.png"
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138974405012246671/leftArrowoff-min.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138974403883966624/rightArrowoff-min.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138974405242921022/leftBoxOff-min.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138966455728226446/centerBoxOff.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138974404576026674/centerBoxOff-min.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138974404370518037/ACPmenu-min.png",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138974405482004530/logo-min.png"
 }
 
 local imgColor = {
@@ -2207,7 +2208,7 @@ local imgColor = {
 }
 
 -- Position for interaction with the image
--- Position is based on the image size of 3340x1440
+-- Position is based on the image size of 2560x1440
 local imgPos1440p = {
 	arrowL = vec4(70, 650, 320, 910),
 	arrowR = vec4(2230, 650, 2490, 910),
@@ -2219,7 +2220,7 @@ local imgPos1440p = {
 }
 
 -- Position adjusted for the current screen size (windowWidth, windowHeight)
-local imgPos = {
+local imgPos_ = {
 	{vec2(imgPos1440p.arrowL.x*windowWidth/2560, imgPos1440p.arrowL.y*windowHeight/1440), vec2(imgPos1440p.arrowL.z*windowWidth/2560, imgPos1440p.arrowL.w*windowHeight/1440)},
 	{vec2(imgPos1440p.arrowR.x*windowWidth/2560, imgPos1440p.arrowR.y*windowHeight/1440), vec2(imgPos1440p.arrowR.z*windowWidth/2560, imgPos1440p.arrowR.w*windowHeight/1440)},
 	{vec2(imgPos1440p.boxL.x*windowWidth/2560, imgPos1440p.boxL.y*windowHeight/1440), vec2(imgPos1440p.boxL.z*windowWidth/2560, imgPos1440p.boxL.w*windowHeight/1440)},
@@ -2229,26 +2230,41 @@ local imgPos = {
 	{vec2(imgPos1440p.close.x*windowWidth/2560, imgPos1440p.close.y*windowHeight/1440), vec2(imgPos1440p.close.z*windowWidth/2560, imgPos1440p.close.w*windowHeight/1440)},
 }
 
+local imgFrame = {vec2(0,0), vec2(windowWidth, windowHeight)}
+
 local imgSet = {
 	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257702129254430/buyCar.jpg",
 	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257701789507595/police.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257701445587026/earn.jpg",
 	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257701445587026/earn.jpg",
 }
 
 local imgLink = {
 	"https://discord.com/channels/358562025032646659/1076123906362056784",
 	"https://discord.com/channels/358562025032646659/1095681142197325975",
-	"https://discord.com/channels/358562025032646659/1075156026992635995"
+	"https://discord.com/channels/358562025032646659/1075156026992635995",
+	""
 }
 
 local imgDisplayed = {
 	1,
 	2,
 	3,
+	4,
 }
 
-local textFrameTopR = imgPos[6][1] + vec2(windowHeight/100, windowHeight/100)
-local textFrameTopL = vec2(imgPos[6][2].x - windowHeight/80, imgPos[6][1].y + windowHeight/100)
+local textFrameTopR = imgPos_[6][1] + vec2(windowHeight/100, windowHeight/100)
+local textFrameTopL = vec2(imgPos_[6][2].x - windowHeight/80, imgPos_[6][1].y + windowHeight/100)
+
+local function drugShowInfo(i)
+	local leftCorner = vec2(imgPos_[i+2][1].x, imgPos_[i+2][1].y) + vec2(windowHeight/100, windowHeight/100)
+	ui.popDWriteFont()
+	ui.pushDWriteFont("Orbitron;Weight=BLACK")
+	ui.dwriteDrawText("Drug Delivery :", 20, leftCorner, rgbm.colors.white)
+	ui.dwriteDrawText("Pick Up : " .. drugDelivery.pickUpName, 30, vec2(leftCorner.x, leftCorner.y + ui.measureDWriteText("Drug Delivery :", 20).y), rgbm.colors.white)
+	ui.dwriteDrawText("Drop Off : " .. drugDelivery.dropOffName, 30, vec2(leftCorner.x, ui.measureDWriteText("Drug Delivery :", 20).y + leftCorner.y + ui.measureDWriteText("Pick Up Point : " .. drugDelivery.pickUpName, 30).y), rgbm.colors.white)
+	ui.popDWriteFont()
+end
 
 local function drawMenuText()
 	ui.popDWriteFont()
@@ -2266,16 +2282,19 @@ local function drawMenuImage()
 		if i == #imgColor - 1 then imgColor[i] = settings.colorHud
 		else imgColor[i] = rgbm.colors.white end
 	end
+	imgToDraw[1] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138974405012246671/leftArrowoff-min.png"
+	imgToDraw[2] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138974403883966624/rightArrowoff-min.png"
 	imgToDraw[3] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283506410192906/leftBoxOff.png"
 	imgToDraw[4] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283503042166834/centerBoxOff.png"
 	imgToDraw[5] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283511443374090/rightBoxOff.png"
 	ui.transparentWindow('welcomeIMG', vec2(0,0), vec2(windowWidth, windowHeight), true, function ()
 		ui.childWindow('welcomeIMGChild', vec2(windowWidth, windowHeight), true, function ()
 			local uiStats = ac.getUI()
-			ui.drawRectFilled(imgPos[6][1], imgPos[6][2], rgbm(0, 0, 0, 0.6))
-			ui.drawRectFilled(imgPos[7][1], imgPos[7][2], rgbm(0, 0, 0, 0.6))
-			if ui.rectHovered(imgPos[1][1], imgPos[1][2]) then
+			ui.drawRectFilled(imgPos_[6][1], imgPos_[6][2], rgbm(0, 0, 0, 0.6))
+			ui.drawRectFilled(imgPos_[7][1], imgPos_[7][2], rgbm(0, 0, 0, 0.6))
+			if ui.rectHovered(imgPos_[1][1], imgPos_[1][2]) then
 				imgColor[1] = settings.colorHud
+				imgToDraw[1] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138974404768972870/leftArrow-min.png"
 				if uiStats.isMouseLeftKeyClicked then
 					for i = 1, #imgDisplayed do
 						if imgDisplayed[i] == #imgSet then
@@ -2285,8 +2304,9 @@ local function drawMenuImage()
 						end
 					end
 				end
-			elseif ui.rectHovered(imgPos[2][1], imgPos[2][2]) then
+			elseif ui.rectHovered(imgPos_[2][1], imgPos_[2][2]) then
 				imgColor[2] = settings.colorHud
+				imgToDraw[2] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138974403649097748/rightArrow-min.png"
 				if uiStats.isMouseLeftKeyClicked then
 					for i = 1, #imgDisplayed do
 						if imgDisplayed[i] == 1 then
@@ -2296,43 +2316,48 @@ local function drawMenuImage()
 						end
 					end
 				end
-			elseif ui.rectHovered(imgPos[3][1], imgPos[3][2]) then
+			elseif ui.rectHovered(imgPos_[3][1], imgPos_[3][2]) then
 				imgColor[3] = settings.colorHud
-				imgToDraw[3] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283507643338842/leftBoxOn.png"
+				imgToDraw[3] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138975450102775858/leftBoxOn-min.png"
 				if uiStats.isMouseLeftKeyClicked then os.openURL(imgLink[imgDisplayed[1]]) end
-			elseif ui.rectHovered(imgPos[4][1], imgPos[4][2]) then
+			elseif ui.rectHovered(imgPos_[4][1], imgPos_[4][2]) then
 				imgColor[4] = settings.colorHud
-				imgToDraw[4] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283504162066513/centerBoxOn.png"
+				imgToDraw[4] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138975449809162352/centerBoxOn-min.png"
 				if uiStats.isMouseLeftKeyClicked then os.openURL(imgLink[imgDisplayed[2]]) end
-			elseif ui.rectHovered(imgPos[5][1], imgPos[5][2]) then
+			elseif ui.rectHovered(imgPos_[5][1], imgPos_[5][2]) then
 				imgColor[5] = settings.colorHud
-				imgToDraw[5] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283500697571348/rightBoxOn.png"
+				imgToDraw[5] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138975450371199057/rightBoxOn-min.png"
 				if uiStats.isMouseLeftKeyClicked then os.openURL(imgLink[imgDisplayed[3]]) end
-			elseif ui.rectHovered(imgPos[7][1], imgPos[7][2]) then
+			elseif ui.rectHovered(imgPos_[7][1], imgPos_[7][2]) then
 				iconCloseColor = settings.colorHud
 				if uiStats.isMouseLeftKeyClicked then welcomeClosed = true end
 			end
-			ui.drawIcon(ui.Icons.Cancel, imgPos[7][1]+vec2(10,10), imgPos[7][2]-vec2(10,10), iconCloseColor)
-			for i = 1, #imgToDraw do ui.drawImage(imgToDraw[i], vec2(0,0), vec2(windowWidth, windowHeight), imgColor[i]) end
-			for i = 1, #imgSet do
-				if i == 1 then ui.drawImage(imgSet[imgDisplayed[i]], imgPos[3][1], imgPos[3][2], rgbm(1,1,1,1))
-				elseif i == 2 then ui.drawImage(imgSet[imgDisplayed[i]], imgPos[4][1], imgPos[4][2], rgbm(1,1,1,1))
-				elseif i == 3 then ui.drawImage(imgSet[imgDisplayed[i]], imgPos[5][1], imgPos[5][2], rgbm(1,1,1,1)) end
+			ui.drawIcon(ui.Icons.Cancel, imgPos_[7][1]+vec2(10,10), imgPos_[7][2]-vec2(10,10), iconCloseColor)
+			for i = 1, #imgToDraw do ui.drawImage(imgToDraw[i], imgFrame[1], imgFrame[2], imgColor[i]) end
+			local colorOfIMG = rgbm(1,1,1,1)
+			for i = 1, 3 do
+				if imgDisplayed[i] == 4 then
+					ui.drawImage(imgSet[imgDisplayed[i]], imgPos_[i+2][1], imgPos_[i+2][2], rgbm(0,0,0,0))
+					drugShowInfo(i)
+				else ui.drawImage(imgSet[imgDisplayed[i]], imgPos_[i+2][1], imgPos_[i+2][2], rgbm(1,1,1,1)) end
 			end
 		end)
 	end)
-	welcomeClosed = true
 end
-
 
 local function drawMenuWelcome()
 	drawMenuImage()
 	drawMenuText()
 end
 
+-- Scale down by 80% and reposition the window in the center
+-- and adjust image position if aspect ratio is not 16:9
+local function adjustImagePos
+
 -------------------------------------------------------------------------------- UPDATE --------------------------------------------------------------------------------
 
 function script.drawUI()
+	if ac.isKeyPressed(ui.KeyIndex.P) then welcomeClosed = not welcomeClosed end
 	if not welcomeClosed then drawMenuWelcome()
 	elseif initialized then
 		if cspVersion < cspMinVersion then return end
@@ -2345,7 +2370,6 @@ function script.drawUI()
 		onlineEventMessageUI()
 		raceUI()
 		drugDeliveryUI()
-		if ac.isKeyPressed(ui.KeyIndex.P) then welcomeClosed = false end
 		if menuOpen then
 			ui.toolWindow('Menu', settings.menuPos, menuSize[currentTab], true, function ()
 				ui.childWindow('childMenu', menuSize[currentTab], true, function ()
@@ -2367,6 +2391,7 @@ function script.update(dt)
 		getFirebase()
 		loadLeaderboard()
 		initDrugRoute()
+		adjustImagePos()
 	else
 		sectorUpdate()
 		raceUpdate(dt)
@@ -2409,3 +2434,27 @@ end
 if carID ~= valideCar[1] and carID ~= valideCar[2] and cspVersion >= cspMinVersion then
 	ui.registerOnlineExtra(ui.Icons.Menu, "Menu", nil, menu, nil, ui.OnlineExtraFlags.Tool, 'ui.WindowFlags.AlwaysAutoResize')
 end
+
+
+
+-- **:checkered_flag: Velocity Vendetta #5 - Rev Up Your Engines! :checkered_flag:**
+
+-- This time, we're hitting the twisty road of H3, where precision and skill will be your greatest allies.
+
+-- **:red_car: Car Restriction: Mazda RX-7 Rental Only**
+-- Level the playing field with the iconic Mazda RX-7. Unleash its raw power and master the curves of H3 as you vie for victory.
+
+-- **:sunrise_over_mountains: Route: Conquer the Twisty Roads of H3**
+-- The racecourse for Velocity Vendetta #5 will put your driving prowess to the test as you navigate the winding paths of H3.
+
+-- **:calendar: Event Period: Race Until August 20th**
+-- You have until August 20th to prove your mettle. So, rev up your engines, take on the challenge, and secure your spot in the Velocity Vendetta hall of fame!
+
+-- **:white_check_mark: How to Participate**
+-- Simply hop into your Mazda RX-7 rental, drive your best lap on the specified route, and your time will be automatically sent to the online leaderboard.
+
+-- **:warning: Important: **Only the rental version is valid for this challenge.
+-- If you're unsure, download the one attached to this message.
+-- Remember, **owned** and **tuned** versions of the car will not be accepted.
+
+-- Good luck to all participants! :four_leaf_clover:
