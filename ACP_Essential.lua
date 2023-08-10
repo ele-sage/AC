@@ -2233,17 +2233,27 @@ local imgPos_ = {
 local imgFrame = {vec2(0,0), vec2(windowWidth, windowHeight)}
 
 local imgSet = {
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257702129254430/buyCar.jpg",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257701789507595/police.jpg",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257701445587026/earn.jpg",
-	"https://cdn.discordapp.com/attachments/1130004696984203325/1138257701445587026/earn.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299157320937502/aboutacp.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299158793138288/leaderboard1.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299158558261358/earnmoney.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299157891366943/buycars.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299159317430292/tuning.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299159019618355/police.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299157618720880/bank.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299158130438257/cartheft2.jpg",
+	"https://cdn.discordapp.com/attachments/1130004696984203325/1139299158340141237/drugdealer.jpg",
 }
 
 local imgLink = {
 	"https://discord.com/channels/358562025032646659/1076123906362056784",
 	"https://discord.com/channels/358562025032646659/1095681142197325975",
 	"https://discord.com/channels/358562025032646659/1075156026992635995",
-	""
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
 }
 
 local imgDisplayed = {
@@ -2276,6 +2286,16 @@ local function drawMenuText()
 	ui.popDWriteFont()
 end
 
+-- Scale down by 80% and reposition the window in the center of the screen
+local function adjustImagePos()
+	for i = 1, #imgPos_ do
+		imgPos_[i][1] = imgPos_[i][1] + vec2(windowWidth/10, windowHeight/10)
+		imgPos_[i][2] = imgPos_[i][2] - vec2(windowWidth/10, windowHeight/10)
+	end
+	imgFrame[2].windowWidth = 16 * windowHeight/9
+end
+
+
 local function drawMenuImage()
 	local iconCloseColor = rgbm.colors.white
 	for i = 1, #imgColor - 1 do
@@ -2287,7 +2307,7 @@ local function drawMenuImage()
 	imgToDraw[3] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283506410192906/leftBoxOff.png"
 	imgToDraw[4] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283503042166834/centerBoxOff.png"
 	imgToDraw[5] = "https://cdn.discordapp.com/attachments/1130004696984203325/1138283511443374090/rightBoxOff.png"
-	ui.transparentWindow('welcomeIMG', vec2(0,0), vec2(windowWidth, windowHeight), true, function ()
+	ui.transparentWindow('welcomeIMG', imgFrame[1], imgFrame[2], true, function ()
 		ui.childWindow('welcomeIMGChild', vec2(windowWidth, windowHeight), true, function ()
 			local uiStats = ac.getUI()
 			ui.drawRectFilled(imgPos_[6][1], imgPos_[6][2], rgbm(0, 0, 0, 0.6))
@@ -2333,7 +2353,7 @@ local function drawMenuImage()
 				if uiStats.isMouseLeftKeyClicked then welcomeClosed = true end
 			end
 			ui.drawIcon(ui.Icons.Cancel, imgPos_[7][1]+vec2(10,10), imgPos_[7][2]-vec2(10,10), iconCloseColor)
-			for i = 1, #imgToDraw do ui.drawImage(imgToDraw[i], imgFrame[1], imgFrame[2], imgColor[i]) end
+			for i = 1, #imgToDraw do ui.drawImage(imgToDraw[i], imgPos_[i][1], imgPos_[i][2], imgColor[i]) end
 			local colorOfIMG = rgbm(1,1,1,1)
 			for i = 1, 3 do
 				if imgDisplayed[i] == 4 then
@@ -2349,10 +2369,6 @@ local function drawMenuWelcome()
 	drawMenuImage()
 	drawMenuText()
 end
-
--- Scale down by 80% and reposition the window in the center
--- and adjust image position if aspect ratio is not 16:9
-local function adjustImagePos
 
 -------------------------------------------------------------------------------- UPDATE --------------------------------------------------------------------------------
 
