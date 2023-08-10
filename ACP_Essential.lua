@@ -2434,27 +2434,3 @@ end
 if carID ~= valideCar[1] and carID ~= valideCar[2] and cspVersion >= cspMinVersion then
 	ui.registerOnlineExtra(ui.Icons.Menu, "Menu", nil, menu, nil, ui.OnlineExtraFlags.Tool, 'ui.WindowFlags.AlwaysAutoResize')
 end
-
-
-
--- **:checkered_flag: Velocity Vendetta #5 - Rev Up Your Engines! :checkered_flag:**
-
--- This time, we're hitting the twisty road of H3, where precision and skill will be your greatest allies.
-
--- **:red_car: Car Restriction: Mazda RX-7 Rental Only**
--- Level the playing field with the iconic Mazda RX-7. Unleash its raw power and master the curves of H3 as you vie for victory.
-
--- **:sunrise_over_mountains: Route: Conquer the Twisty Roads of H3**
--- The racecourse for Velocity Vendetta #5 will put your driving prowess to the test as you navigate the winding paths of H3.
-
--- **:calendar: Event Period: Race Until August 20th**
--- You have until August 20th to prove your mettle. So, rev up your engines, take on the challenge, and secure your spot in the Velocity Vendetta hall of fame!
-
--- **:white_check_mark: How to Participate**
--- Simply hop into your Mazda RX-7 rental, drive your best lap on the specified route, and your time will be automatically sent to the online leaderboard.
-
--- **:warning: Important: **Only the rental version is valid for this challenge.
--- If you're unsure, download the one attached to this message.
--- Remember, **owned** and **tuned** versions of the car will not be accepted.
-
--- Good luck to all participants! :four_leaf_clover:
